@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use LogicException;
 use InvalidArgumentException;
 use Illuminate\Database\Eloquent\Model;
-use Wisdomanthoni\Paystack\Subscription as PaystackSubscription;
 class Subscription extends Model
 {
     /**
@@ -42,7 +41,7 @@ class Subscription extends Model
      */
     public function owner()
     {
-        $model = getenv('PAYSTACK_MODEL') ?: config('services.paystack.model', 'App\\User');
+        $model = getenv('PAYSTACK_MODEL') ?: config('paystack.model', 'App\\User');
         $model = new $model;
         return $this->belongsTo(get_class($model), $model->getForeignKey());
     }
@@ -135,7 +134,7 @@ class Subscription extends Model
                 ? ['update' => [['existingId' => $addonName, 'quantity' => $quantity]]]
                 : ['add' => [['inheritedFromId' => $addonName, 'quantity' => $quantity]]];
         }
-        PaystackSubscription::update($this->Paystack_id, ['addOns' => $options]);
+        PaystackService::update($this->Paystack_id, ['addOns' => $options]);
         $this->quantity = $quantity + 1;
         $this->save();
         return $this;
@@ -160,8 +159,8 @@ class Subscription extends Model
         if ($this->wouldChangeBillingFrequency($plan) && $this->prorate) {
             return $this->swapAcrossFrequencies($plan);
         }
-        $subscription = $this->asPaystackSubscription();
-        $response = PaystackSubscription::update($subscription->id, [
+        $subscription = $this->asPaystackService();
+        $response = PaystackService::update($subscription->id, [
             'planId' => $plan->id,
             'price' => number_format($plan->price * (1 + ($this->owner->taxPercentage() / 100)), 2, '.', ''),
             'neverExpires' => true,
@@ -255,7 +254,7 @@ class Subscription extends Model
     protected function moneyRemainingOnYearlyPlan(Plan $plan)
     {
         return ($plan->price / 365) * Carbon::today()->diffInDays(Carbon::instance(
-            $this->asPaystackSubscription()->billingPeriodEndDate
+            $this->asPaystackService()->billingPeriodEndDate
         ), false);
     }
     /**
@@ -266,7 +265,7 @@ class Subscription extends Model
     protected function getDiscountForSwitchToYearly()
     {
         $amount = 0;
-        foreach ($this->asPaystackSubscription()->discounts as $discount) {
+        foreach ($this->asPaystackService()->discounts as $discount) {
             if ($discount->id == 'plan-credit') {
                 $amount += (float) $discount->amount * $discount->numberOfBillingCycles;
             }
@@ -288,7 +287,7 @@ class Subscription extends Model
         if (! $this->active()) {
             throw new InvalidArgumentException("Unable to apply coupon. Subscription not active.");
         }
-        PaystackSubscription::update($this->Paystack_id, [
+        PaystackService::update($this->Paystack_id, [
             'discounts' => [
                 'add' => [[
                     'inheritedFromId' => $coupon,
@@ -305,7 +304,7 @@ class Subscription extends Model
      */
     protected function currentDiscounts()
     {
-        return collect($this->asPaystackSubscription()->discounts)->map(function ($discount) {
+        return collect($this->asPaystackService()->discounts)->map(function ($discount) {
             return $discount->id;
         })->all();
     }
@@ -316,12 +315,12 @@ class Subscription extends Model
      */
     public function cancel()
     {
-        $subscription = $this->asPaystackSubscription();
+        $subscription = $this->asPaystackService();
         if ($this->onTrial()) {
-            PaystackSubscription::cancel($subscription->id);
+            PaystackService::cancel($subscription->id);
             $this->markAsCancelled();
         } else {
-            PaystackSubscription::update($subscription->id, [
+            PaystackService::update($subscription->id, [
                 'numberOfBillingCycles' => $subscription->currentBillingCycle,
             ]);
             $this->ends_at = $subscription->billingPeriodEndDate;
@@ -336,8 +335,8 @@ class Subscription extends Model
      */
     public function cancelNow()
     {
-        $subscription = $this->asPaystackSubscription();
-        PaystackSubscription::cancel($subscription->id);
+        $subscription = $this->asPaystackService();
+        PaystackService::cancel($subscription->id);
         $this->markAsCancelled();
         return $this;
     }
@@ -363,8 +362,8 @@ class Subscription extends Model
         if (! $this->onGracePeriod()) {
             throw new LogicException('Unable to resume subscription that is not within grace period.');
         }
-        $subscription = $this->asPaystackSubscription();
-        PaystackSubscription::update($subscription->id, [
+        $subscription = $this->asPaystackService();
+        PaystackService::update($subscription->id, [
             'neverExpires' => true,
             'numberOfBillingCycles' => null,
         ]);
@@ -377,8 +376,8 @@ class Subscription extends Model
      *
      * @return \Paystack\Subscription
      */
-    public function asPaystackSubscription(): PaystackSubscription
+    public function asPaystackService(): PaystackService
     {
-        return PaystackSubscription::find($this->Paystack_id);
+        return PaystackService::find($this->Paystack_id);
     }
 }

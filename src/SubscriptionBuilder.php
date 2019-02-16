@@ -3,7 +3,6 @@ namespace Wisdomanthoni\Cashier;
 
 use Exception;
 use Carbon\Carbon;
-use Wisdomanthoni\Paystack\Subscription as PaystackSubscription;
 class SubscriptionBuilder
 {
     /**
@@ -116,7 +115,7 @@ class SubscriptionBuilder
         if ($this->coupon) {
             $payload = $this->addCouponToPayload($payload);
         }
-        $response = PaystackSubscription::create($payload);
+        $response = PaystackService::create($payload);
         if (! $response->success) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
         }

@@ -6,9 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
-use Wisdomanthoni\Paystack\Customer as PaystackCustomer;
-use Wisdomanthoni\Paystack\Transaction as PaystackTransaction;
-use Wisdomanthoni\Paystack\Subscription as PaystackSubscription;
+use Unicodeveloper\Paystack\Paystack as PayStackWrapper;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait Billable
@@ -18,7 +16,6 @@ trait Billable
      *
      * @param  int  $amount
      * @param  array  $options
-     * @return \Paystack\Result\Successful
      * @throws \Exception
      */
     public function charge($amount, array $options = [])
@@ -31,7 +28,6 @@ trait Billable
      * @param  string  $description
      * @param  int  $amount
      * @param  array  $options
-     * @return \Paystack\Result\Successful
      * @throws \Exception
      */
     public function tab($description, $amount, array $options = [])
@@ -79,7 +75,7 @@ trait Billable
             return $subscription && $subscription->onTrial();
         }
         return $subscription && $subscription->onTrial() &&
-               $subscription->Paystack_plan === $plan;
+               $subscription->paystack_plan === $plan;
     }
     /**
      * Determine if the model is on a "generic" trial at the user level.
@@ -141,7 +137,7 @@ trait Billable
     public function findInvoice($id)
     {
         try {
-            $invoice = PaystackTransaction::find($id);
+            $invoice = PaystackService::find($id);
             if ($invoice->customerDetails->id != $this->Paystack_id) {
                 return;
             }
@@ -211,7 +207,7 @@ trait Billable
     {
         foreach ($this->subscriptions as $subscription) {
             if ($subscription->active()) {
-                PaystackSubscription::update($subscription->Paystack_id, [
+                PaystackService::update($subscription->Paystack_id, [
                     'paymentMethodToken' => $token,
                 ]);
             }
@@ -243,7 +239,7 @@ trait Billable
      */
     public function paymentMethod()
     {
-        $customer = $this->asPaystackCustomer();
+        $customer = $this->asPaystackService();
         foreach ($customer->paymentMethods as $paymentMethod) {
             if ($paymentMethod->isDefault()) {
                 return $paymentMethod;
@@ -290,7 +286,7 @@ trait Billable
      * @return \Paystack\Customer
      * @throws \Exception
      */
-    public function createAsPaystackCustomer($token, array $options = []): Customer
+    public function createAsPaystackService($token, array $options = []): Customer
     {
         
     }
@@ -311,9 +307,9 @@ trait Billable
      * @return \Paystack\Customer
      * @throws \Paystack\Exception\NotFound
      */
-    public function asPaystackCustomer()
+    public function asPaystackService()
     {
-        return PaystackCustomer::fetchCustomer($this->paystack_id);
+        return PaystackService::fetchCustomer($this->paystack_id);
     }
 
     /**
