@@ -17,8 +17,7 @@
         "illuminate/support": "~5.7.0|~5.8.0",
         "nesbot/carbon": "~1.0",
         "symfony/http-kernel": "~4.0",
-        "unicodeveloper/laravel-paystack": "^1.0",
-        "yabacon/paystack-php": "^2.1"
+        "unicodeveloper/laravel-paystack": "^1.0"
     },
     "require-dev": {
         "ext-json": "*",
