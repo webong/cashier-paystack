@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
-use Unicodeveloper\Paystack\Paystack as PayStackWrapper;
+use Unicodeveloper\Paystack\Facades\Paystack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait Billable
@@ -20,8 +20,32 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
-        
+        $options['amount'] = $amount;
+        $options['reference'] = $paystack->genTranxRef();
+
+        if (! array_key_exists('email', $options) && $this->email) {
+            $options['email'] = $this->email;
+        }
+
+        $response = Paystack::makePaymentRequest($options);
+        $response->url = $response->getResponse()['data']['authorization_url'];
+        return $response; 
     }
+
+    /**
+     * Refund a customer for a charge.
+     *
+     * @param  string  $charge
+     * @param  array  $options
+     * @return \Stripe\Refund
+     * @throws \InvalidArgumentException
+     */
+    public function refund($charge, array $options = [])
+    {
+        $options['charge'] = $charge;
+        return PaystackService::refund($options, ['api_key' => $this->getStripeKey()]);
+    }
+
     /**
      * Invoice the customer for the given amount.
      *
@@ -32,7 +56,21 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        
+        if (! $this->paystack_id) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
+
+        if (! array_key_exists('due_date', $options)) {
+            throw new InvalidArgumentException('No due date provided.');
+        }
+
+        $options = array_merge([
+            'customer' => $this->paystack_id,
+            'amount' => $amount,
+            'currency' => $this->preferredCurrency(),
+            'description' => $description,
+        ], $options);
+        return Invoice::create($options);
     }
     /**
      * Invoice the customer for the given amount (alias).
@@ -40,7 +78,6 @@ trait Billable
      * @param  string  $description
      * @param  int  $amount
      * @param  array  $options
-     * @return \Paystack\Result\Successful
      * @throws \Exception
      */
     public function invoiceFor($description, $amount, array $options = [])
@@ -137,7 +174,7 @@ trait Billable
     public function findInvoice($id)
     {
         try {
-            $invoice = PaystackService::find($id);
+            $invoice = Invoice::find($id);
             if ($invoice->customerDetails->id != $this->Paystack_id) {
                 return;
             }
@@ -198,23 +235,6 @@ trait Billable
     }
 
     /**
-     * Update the payment method token for all of the model's subscriptions.
-     *
-     * @param  string  $token
-     * @return void
-     */
-    protected function updateSubscriptionsToPaymentMethod($token)
-    {
-        foreach ($this->subscriptions as $subscription) {
-            if ($subscription->active()) {
-                PaystackService::update($subscription->Paystack_id, [
-                    'paymentMethodToken' => $token,
-                ]);
-            }
-        }
-    }
-
-    /**
      * Apply a coupon to the billable entity.
      *
      * @param  string  $coupon
@@ -231,21 +251,7 @@ trait Billable
         }
         $subscription->applyCoupon($coupon, $removeOthers);
     }
-    /**
-     * Get the default payment method for the customer.
-     *
-     * @return array
-     * @throws \Paystack\Exception\NotFound
-     */
-    public function paymentMethod()
-    {
-        $customer = $this->asPaystackService();
-        foreach ($customer->paymentMethods as $paymentMethod) {
-            if ($paymentMethod->isDefault()) {
-                return $paymentMethod;
-            }
-        }
-    }
+   
     /**
      * Determine if the model is actively subscribed to one of the given plans.
      *
@@ -275,7 +281,7 @@ trait Billable
     public function onPlan($plan)
     {
         return ! is_null($this->subscriptions->first(function ($value) use ($plan) {
-            return $value->Paystack_plan === $plan;
+            return $value->paystack_plan === $plan;
         }));
     }
     /**
@@ -283,12 +289,45 @@ trait Billable
      *
      * @param  string  $token
      * @param  array  $options
-     * @return \Paystack\Customer
      * @throws \Exception
      */
-    public function createAsPaystackService($token, array $options = []): Customer
+    public function createAsPaystackCustomer($token, array $options = [])
     {
+        $options = array_key_exists('email', $options)
+        ? $options
+        : array_merge($options, ['email' => $this->email]);
+
+        $response = PaystackService::createCustomer($options);
+
+        if (! $response->status) {
+            throw new Exception('Unable to create Paystack customer: '.$response->message);
+        }
         
+        $this->paystack_id = $response->data->customer_code;
+        $this->save();
+
+        return $response->data;   
+    }
+
+    /**
+     * Get the Paystack customer for the model.
+     *
+     * @return \Paystack\Customer
+     * @throws \Paystack\Exception\NotFound
+     */
+    public function asPaystackCustomer()
+    {
+        return Paystack::fetchCustomer($this->paystack_id);
+    }
+
+    /**
+     * Determine if the entity has a Paystack customer ID.
+     *
+     * @return bool
+     */
+    public function hasPaystackId()
+    {
+        return ! is_null($this->paystack_id);
     }
 
     /**
@@ -301,24 +340,15 @@ trait Billable
         return 0;
     }
 
-    /**
-     * Get the Paystack customer for the model.
-     *
-     * @return \Paystack\Customer
-     * @throws \Paystack\Exception\NotFound
-     */
-    public function asPaystackService()
-    {
-        return PaystackService::fetchCustomer($this->paystack_id);
-    }
 
     /**
-     * Determine if the entity has a Paystack customer ID.
+     * Get the Paystack supported currency used by the entity.
      *
-     * @return bool
+     * @return string
      */
-    public function hasPaystackId()
+    public function preferredCurrency()
     {
-        return ! is_null($this->customer_id);
+        return Cashier::usesCurrency();
     }
+
 }

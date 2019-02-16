@@ -48,14 +48,16 @@ class Cashier
         switch (strtolower($currency)) {
             case 'ngn':
                 return '₦';
-            case 'usd':
-            case 'aud':
-            case 'cad':
-                return '$';
+            case 'ghs':
+                return 'GH₵';
             case 'eur':
                 return '€';
             case 'gbp':
                 return '£';
+            case 'usd':
+            case 'aud':
+            case 'cad':
+                return '$';
             default:
                 throw new Exception("Unable to guess symbol for currency. Please explicitly specify it.");
         }

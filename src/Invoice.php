@@ -229,15 +229,17 @@ class Invoice
             'Content-Type' => 'application/pdf',
         ]);
     }
+    
     /**
      * Get the Paystack transaction instance.
      *
      * @return \Paystack\Transaction
      */
-    public function asPaystackTransaction(): Transaction
+    public function asPaystackTransaction()
     {
         return $this->transaction;
     }
+
     /**
      * Dynamically get values from the Paystack transaction.
      *

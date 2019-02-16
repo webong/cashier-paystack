@@ -3,6 +3,7 @@ namespace Wisdomanthoni\Cashier;
 
 use Exception;
 use Carbon\Carbon;
+use Unicodeveloper\Paystack\Facades\Paystack;
 class SubscriptionBuilder
 {
     /**
@@ -107,15 +108,15 @@ class SubscriptionBuilder
      * @return \Laravel\Cashier\Subscription
      * @throws \Exception
      */
-    public function create($token = null, array $customerOptions = [], array $subscriptionOptions = []): Subscription
+    public function create($token = null, array $options = [])
     {
-        $payload = $this->getSubscriptionPayload(
-            $this->getPaystackCustomer($token, $customerOptions), $subscriptionOptions
-        );
+        $customer = $this->getPaystackCustomer($token, $options);
+
         if ($this->coupon) {
-            $payload = $this->addCouponToPayload($payload);
+            // TODO: coupon feature
         }
-        $response = PaystackService::create($payload);
+        $response = PaystackService::createSubscription($this->buildPayload($customer));
+
         if (! $response->success) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
         }
@@ -137,44 +138,32 @@ class SubscriptionBuilder
     /**
      * Get the base subscription payload for Paystack.
      *
-     * @param  \Paystack\Customer  $customer
+     * @param  $customer
      * @param  array  $options
      * @return array
      * @throws \Exception
      */
-    protected function getSubscriptionPayload($customer, array $options = [])
+    protected function buildPayload($customer, array $options = [])
     {
-        $plan = PaystackService::findPlan($this->plan);
+        $plan = Paystack::fetchPlan($this->plan);
+
+        if ($plan) {
+            # code...
+        }
+
         if ($this->skipTrial) {
-            $trialDuration = 0;
+            $startDate = Carbon::now();
         } else {
-            $trialDuration = $this->trialDays ?: 0;
+            $startDate =  $this->trialDays ? Carbon::now()->addDays($this->trialDays) : Carbon::now();
         }
-        return array_merge([
-            'planId' => $this->plan,
-            'price' => number_format($plan->price * (1 + ($this->owner->taxPercentage() / 100)), 2, '.', ''),
-            'paymentMethodToken' => $this->owner->paymentMethod()->token,
-            'trialPeriod' => $this->trialDays && ! $this->skipTrial ? true : false,
-            'trialDurationUnit' => 'day',
-            'trialDuration' => $trialDuration,
-        ], $options);
-    }
-    /**
-     * Add the coupon discount to the Paystack payload.
-     *
-     * @param  array  $payload
-     * @return array
-     */
-    protected function addCouponToPayload(array $payload)
-    {
-        if (! isset($payload['discounts']['add'])) {
-            $payload['discounts']['add'] = [];
-        }
-        $payload['discounts']['add'][] = [
-            'inheritedFromId' => $this->coupon,
+
+        $data = [
+            "customer" => $customer, //Customer email or code
+            "plan" => $this->plan,
+            "start_date" => $startDate,
         ];
-        return $payload;
     }
+    
     /**
      * Get the Paystack customer instance for the current user and token.
      *
@@ -182,16 +171,13 @@ class SubscriptionBuilder
      * @param  array  $options
      * @return \Paystack\Customer
      */
-    protected function getPaystackCustomer($token = null, array $options = []): Customer
+    protected function getPaystackCustomer($token = null, array $options = [])
     {
-        if (! $this->owner->Paystack_id) {
+        if (! $this->owner->paystack_id) {
             $customer = $this->owner->createAsPaystackCustomer($token, $options);
         } else {
             $customer = $this->owner->asPaystackCustomer();
-            if ($token) {
-                $this->owner->updateCard($token);
-            }
         }
-        return $customer;
+        return $customer->customer_code;
     }
 }
