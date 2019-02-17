@@ -4,7 +4,7 @@ Cashier provides an expressive, fluent interface to Paystack's subscription bill
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
 
-`composer require wisdomantoni/cashier-paystack`
+`composer require wisdomanthoni/cashier-paystack`
 
 ## Configuration
 You can publish the configuration file using this command:
