@@ -42,7 +42,17 @@ return [
      */
     'merchantEmail' => getenv('MERCHANT_EMAIL'),
 
+    /**
+     * User model for customers
+     *
+     */
+    'merchantEmail' => getenv('PAYSTACK_MODEL'),
+
 ];
+```
+Update your .env file with the user model
+```
+PAYSTACK_MODEL='App\User'
 ```
 
 ## Database Migrations
