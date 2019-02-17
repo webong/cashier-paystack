@@ -46,7 +46,7 @@ return [
      * User model for customers
      *
      */
-    'merchantEmail' => getenv('PAYSTACK_MODEL'),
+    'model' => getenv('PAYSTACK_MODEL'),
 
 ];
 ```
