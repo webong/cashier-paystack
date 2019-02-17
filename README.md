@@ -292,13 +292,17 @@ $user->refund($paystackCharge->reference);
 ```
 Invoices
 You may easily retrieve an array of a billable model's invoices using the invoices method:
-
+```php
 $invoices = $user->invoices();
 
-// Include pending invoices in the results...
-$invoices = $user->invoicesIncludingPending();
-When listing the invoices for the customer, you may use the invoice's helper methods to display the relevant invoice information. For example, you may wish to list every invoice in a table, allowing the user to easily download any of them:
+// Include only pending invoices in the results...
+$invoices = $user->invoicesOnlyPending();
 
+// Include only paid invoices in the results...
+$invoices = $user->invoicesOnlyPaid();
+```
+When listing the invoices for the customer, you may use the invoice's helper methods to display the relevant invoice information. For example, you may wish to list every invoice in a table, allowing the user to easily download any of them:
+```html
 <table>
     @foreach ($invoices as $invoice)
         <tr>
@@ -308,10 +312,10 @@ When listing the invoices for the customer, you may use the invoice's helper met
         </tr>
     @endforeach
 </table>
-
+```
 Generating Invoice PDFs
 From within a route or controller, use the downloadInvoice method to generate a PDF download of the invoice. This method will automatically generate the proper HTTP response to send the download to the browser:
-
+```php
 use Illuminate\Http\Request;
 
 Route::get('user/invoice/{invoice}', function (Request $request, $invoiceId) {
@@ -320,3 +324,4 @@ Route::get('user/invoice/{invoice}', function (Request $request, $invoiceId) {
         'product' => 'Your Product',
     ]);
 });
+```
