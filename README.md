@@ -2,7 +2,7 @@
 Cashier provides an expressive, fluent interface to Paystack's subscription invoicing services.
 
 ## Composer
-First, add the Cashier package for Paystackk to your dependencies:
+First, add the Cashier package for Paystack to your dependencies:
 
 `composer require wisdomantoni/cashier-paystack`
 
