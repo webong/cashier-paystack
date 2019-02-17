@@ -97,7 +97,7 @@
             <td>
                 <!-- Invoice Info -->
                 <p>
-                    <strong>Product:</strong> {{ $product }}<br>
+                    <strong>Status:</strong> {{ $invoice->status }}<br>
                     <strong>Invoice Number:</strong> {{ $invoice->id }}<br>
                 </p>
 
