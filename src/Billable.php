@@ -33,7 +33,7 @@ trait Billable
 
         $response = Paystack::makePaymentRequest($options);
         $response->url = $response->getResponse()['data']['authorization_url'];
-        return $response; 
+        return $response->getData(); 
     }
 
     /**
@@ -95,7 +95,7 @@ trait Billable
      * @param  string  $plan
      * @return \Laravel\Cashier\SubscriptionBuilder
      */
-    public function newSubscription($subscription, $plan): SubscriptionBuilder
+    public function newSubscription($subscription = 'default', $plan): SubscriptionBuilder
     {
         return new SubscriptionBuilder($this, $subscription, $plan);
     }

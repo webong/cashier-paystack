@@ -1,2 +1,322 @@
 # Cashier Paystack
 Cashier provides an expressive, fluent interface to Paystack's subscription invoicing services.
+
+## Composer
+First, add the Cashier package for Paystackk to your dependencies:
+
+`composer require wisdomantoni/cashier-paystack`
+
+## Configuration
+You can publish the configuration file using this command:
+
+```shell
+php artisan vendor:publish --provider="Unicodeveloper\Paystack\PaystackServiceProvider"
+```
+A configuration-file named paystack.php with some sensible defaults will be placed in your config directory:
+```php
+<?php
+
+return [
+
+    /**
+     * Public Key From Paystack Dashboard
+     *
+     */
+    'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
+
+    /**
+     * Secret Key From Paystack Dashboard
+     *
+     */
+    'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
+
+    /**
+     * Paystack Payment URL
+     *
+     */
+    'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
+
+    /**
+     * Optional email address of the merchant
+     *
+     */
+    'merchantEmail' => getenv('MERCHANT_EMAIL'),
+
+];
+```
+
+## Database Migrations
+Before using Cashier, we'll also need to prepare the database. We need to add several columns to your  users table and create a new subscriptions table to hold all of our customer's subscriptions:
+
+```php
+Schema::table('users', function ($table) {
+    $table->string('paystack_id')->nullable()->collation('utf8mb4_bin');
+    $table->timestamp('trial_ends_at')->nullable();
+});
+```
+```php
+Schema::create('subscriptions', function ($table) {
+    $table->increments('id');
+    $table->unsignedInteger('user_id');
+    $table->string('name');
+    $table->string('paystack_id')->collation('utf8mb4_bin');
+    $table->string('paystack_Paystack');
+    $table->integer('quantity');
+    $table->timestamp('trial_ends_at')->nullable();
+    $table->timestamp('ends_at')->nullable();
+    $table->timestamps();
+});
+```
+Once the migrations have been created, run the migrate Artisan command.
+
+## Billable Model
+Next, add the Billable trait to your model definition. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating credit card information:
+```php
+use Laravel\Cashier\Billable;
+
+class User extends Authenticatable
+{
+    use Billable;
+}
+```
+
+## Subscriptions
+
+### Creating Subscriptions
+To create a subscription, first retrieve an instance of your billable model, which typically will be an instance of App\User. Once you have retrieved the model instance, you may use the  newSubscription method to create the model's subscription:
+
+```php
+$user = User::find(1);
+$plan_name = // Paystack type e.g default, main, yakata
+$plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+$user->newSubscription('main', $plan_code)->create($auth_token);
+// Accepts an auth token for the customer
+$user->newSubscription('main', $plan_code)->create(); 
+// The customer's most recent authorization would be used
+```
+The first argument passed to the newSubscription method should be the name of the subscription. If your application only offers a single subscription, you might call this main or primary. The second argument is the specific Paystack Paystack code the user is subscribing to. This value should correspond to the Paystack's code identifier in Paystack.
+
+The create method, which may accept a authorization token, will begin the subscription as well as update your database with the customer ID and other relevant billing information.
+
+Additional User Details
+If you would like to specify additional customer details, you may do so by passing them as the second argument to the create method:
+```php
+$user->newSubscription('main', 'monthly')->create($auth_token, [
+    'data' => 'More Data',
+]);
+```
+To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
+
+### Checking Subscription Status
+Once a user is subscribed to your application, you may easily check their subscription status using a variety of convenient methods. First, the subscribed method returns true if the user has an active subscription, even if the subscription is currently within its trial period:
+```php
+if ($user->subscribed('main')) {
+    //
+}
+```
+The subscribed method also makes a great candidate for a route middleware, allowing you to filter access to routes and controllers based on the user's subscription status:
+```php
+public function handle($request, Closure $next)
+{
+    if ($request->user() && ! $request->user()->subscribed('main')) {
+        // This user is not a paying customer...
+        return redirect('billing');
+    }
+
+    return $next($request);
+}
+```
+
+If you would like to determine if a user is still within their trial period, you may use the onTrial method. This method can be useful for displaying a warning to the user that they are still on their trial period:
+```php
+if ($user->subscription('main')->onTrial()) {
+    //
+}
+```
+
+The subscribedToPaystack method may be used to determine if the user is subscribed to a given Paystack based on a given Paystack Paystack code. In this example, we will determine if the user's main subscription is actively subscribed to the monthly Paystack:
+```php
+$plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+if ($user->subscribedToPaystack($plan_code, 'main')) {
+    //
+}
+```
+### Cancelled Subscription Status
+To determine if the user was once an active subscriber, but has cancelled their subscription, you may use the cancelled method:
+```php
+if ($user->subscription('main')->cancelled()) {
+    //
+}
+```
+You may also determine if a user has cancelled their subscription, but are still on their "grace period" until the subscription fully expires. For example, if a user cancels a subscription on March 5th that was originally scheduled to expire on March 10th, the user is on their "grace period" until March 10th. Note that the subscribed method still returns true during this time:
+```php
+if ($user->subscription('main')->onGracePeriod()) {
+    //
+}
+```
+
+### Cancelling Subscriptions
+To cancel a subscription, call the cancel method on the user's subscription:
+```php
+$user->subscription('main')->cancel();
+```
+When a subscription is cancelled, Cashier will automatically set the ends_at column in your database. This column is used to know when the subscribed method should begin returning false. For example, if a customer cancels a subscription on March 1st, but the subscription was not scheduled to end until March 5th, the subscribed method will continue to return true until March 5th.
+
+You may determine if a user has cancelled their subscription but are still on their "grace period" using the  onGracePeriod method:
+```php
+if ($user->subscription('main')->onGracePeriod()) {
+    //
+}
+```
+If you wish to cancel a subscription immediately, call the cancelNow method on the user's subscription:
+```php
+$user->subscription('main')->cancelNow();
+```
+
+### Resuming Subscriptions
+If a user has cancelled their subscription and you wish to resume it, use the resume method. The user must still be on their grace period in order to resume a subscription:
+```php
+$user->subscription('main')->resume();
+```
+If the user cancels a subscription and then resumes that subscription before the subscription has fully expired, they will not be billed immediately. Instead, their subscription will be re-activated, and they will be billed on the original billing cycle.
+
+## Subscription Trials
+
+### With Billing Up Front
+If you would like to offer trial periods to your customers while still collecting payment method information up front, you should use the trialDays method when creating your subscriptions:
+```php
+$user = User::find(1);
+
+$user->newSubscription('main', 'monthly')
+            ->trialDays(10)
+            ->create($auth_token);
+```
+This method will set the trial period ending date on the subscription record within the database, as well as instruct Paystack to not begin billing the customer until after this date.
+
+If the customer's subscription is not cancelled before the trial ending date they will be charged as soon as the trial expires, so you should be sure to notify your users of their trial ending date.
+
+You may determine if the user is within their trial period using either the onTrial method of the user instance, or the onTrial method of the subscription instance. The two examples below are identical:
+```php
+if ($user->onTrial('main')) {
+    //
+}
+
+if ($user->subscription('main')->onTrial()) {
+    //
+}
+```
+
+## Without Billing Up Front
+If you would like to offer trial periods without collecting the user's payment method information up front, you may set the trial_ends_at column on the user record to your desired trial ending date. This is typically done during user registration:
+```php
+$user = User::create([
+    // Populate other user properties...
+    'trial_ends_at' => now()->addDays(10),
+]);
+```
+Be sure to add a date mutator for trial_ends_at to your model definition.
+
+Cashier refers to this type of trial as a "generic trial", since it is not attached to any existing subscription. The onTrial method on the User instance will return true if the current date is not past the value of trial_ends_at:
+```php
+if ($user->onTrial()) {
+    // User is within their trial period...
+}
+```
+You may also use the onGenericTrial method if you wish to know specifically that the user is within their "generic" trial period and has not created an actual subscription yet:
+```php
+if ($user->onGenericTrial()) {
+    // User is within their "generic" trial period...
+}
+```
+Once you are ready to create an actual subscription for the user, you may use the newSubscription method as usual:
+```php
+$user = User::find(1);
+$plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+$user->newSubscription('main', $plan_code)->create($auth_token);
+```
+
+## Customers
+
+### Creating Customers
+Occasionally, you may wish to create a Stripe customer without beginning a subscription. You may accomplish this using the createAsStripeCustomer method:
+```php
+$user->createAsPaystackCustomer();
+```
+Once the customer has been created in Paystack, you may begin a subscription at a later date.
+
+
+## Single Charges
+
+### Simple Charge
+When using Paystack, the charge method accepts the amount you would like to charge in the lowest denominator of the currency used by your application.
+
+If you would like to make a "one off" charge against a subscribed customer's credit card, you may use the  charge method on a billable model instance.
+
+// Paystack Accepts Charges In Kobo...
+$stripeCharge = $user->charge(10000);
+
+The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Stripe / Braintree charge creation. Consult the Stripe or Braintree documentation regarding the options available to you when creating charges:
+
+$user->charge(100, [
+    'more_option' => $value,
+]);
+The charge method will throw an exception if the charge fails. If the charge is successful, the full Paystack response will be returned from the method:
+
+try {
+    $response = $user->charge(10000);
+} catch (Exception $e) {
+    //
+}
+
+## Charge With Invoice
+Sometimes you may need to make a one-time charge but also generate an invoice for the charge so that you may offer a PDF receipt to your customer. The invoiceFor method lets you do just that. For example, let's invoice the customer ₦2000.00 for a "One Time Fee":
+```php
+// Paystack Accepts Charges In Kobo...
+$user->invoiceFor('One Time Fee', 200000);
+```
+The invoice will be charged immediately against the user's credit card. The invoiceFor method also accepts an array as its third argument. This array contains the billing options for the invoice item. The fourth argument accepted by the method is also an array. This final argument accepts the billing options for the invoice itself:
+```php
+$user->invoiceFor('Stickers', 50000, [
+    'line_items' => [ ],
+    'tax' => [{"name":"VAT", "amount":2000}]
+]);
+```
+To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
+
+Refunding Charges
+If you need to refund a Stripe charge, you may use the refund method. This method accepts the Stripe charge ID as its only argument:
+```php
+$paystackCharge = $user->charge(100);
+
+$user->refund($paystackCharge->reference);
+```
+Invoices
+You may easily retrieve an array of a billable model's invoices using the invoices method:
+
+$invoices = $user->invoices();
+
+// Include pending invoices in the results...
+$invoices = $user->invoicesIncludingPending();
+When listing the invoices for the customer, you may use the invoice's helper methods to display the relevant invoice information. For example, you may wish to list every invoice in a table, allowing the user to easily download any of them:
+
+<table>
+    @foreach ($invoices as $invoice)
+        <tr>
+            <td>{{ $invoice->date()->toFormattedDateString() }}</td>
+            <td>{{ $invoice->total() }}</td>
+            <td><a href="/user/invoice/{{ $invoice->id }}">Download</a></td>
+        </tr>
+    @endforeach
+</table>
+
+Generating Invoice PDFs
+From within a route or controller, use the downloadInvoice method to generate a PDF download of the invoice. This method will automatically generate the proper HTTP response to send the download to the browser:
+
+use Illuminate\Http\Request;
+
+Route::get('user/invoice/{invoice}', function (Request $request, $invoiceId) {
+    return $request->user()->downloadInvoice($invoiceId, [
+        'vendor'  => 'Your Company',
+        'product' => 'Your Product',
+    ]);
+});
