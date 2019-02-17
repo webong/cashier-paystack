@@ -262,22 +262,24 @@ When using Paystack, the charge method accepts the amount you would like to char
 
 If you would like to make a "one off" charge against a subscribed customer's credit card, you may use the  charge method on a billable model instance.
 
+```php
 // Paystack Accepts Charges In Kobo...
 $stripeCharge = $user->charge(10000);
-
+```
 The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Stripe / Braintree charge creation. Consult the Stripe or Braintree documentation regarding the options available to you when creating charges:
-
+```php
 $user->charge(100, [
     'more_option' => $value,
 ]);
+```
 The charge method will throw an exception if the charge fails. If the charge is successful, the full Paystack response will be returned from the method:
-
+```php
 try {
     $response = $user->charge(10000);
 } catch (Exception $e) {
     //
 }
-
+```
 ## Charge With Invoice
 Sometimes you may need to make a one-time charge but also generate an invoice for the charge so that you may offer a PDF receipt to your customer. The invoiceFor method lets you do just that. For example, let's invoice the customer ₦2000.00 for a "One Time Fee":
 ```php
