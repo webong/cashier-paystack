@@ -105,6 +105,21 @@ class PaystackService {
     //     $request->replace($data);
     // }
 
+    public static function createInvoice($data)
+    {
+        return self::setHttpResponse('/paymentrequest', 'POST', $data)->getResponse();
+    }
+
+    public static function findInvoice($invoice_id)
+    {
+        return self::setHttpResponse('/paymentrequest'. $invoice_id, 'GET', [])->getData();
+    }
+
+    public static function fetchInvoices($data)
+    {
+        return self::setHttpResponse('/paymentrequest', 'GET', $data)->getData();
+    }
+
     public static function createSubscription($data)
     {
         return self::setHttpResponse('/subscription', 'POST', $data)->getResponse();
@@ -153,6 +168,5 @@ class PaystackService {
         $response = self::setHttpResponse('/customer/'. $customer_id, 'GET', [])->getData();
 
         return $response->authorizations;
-
     }
 }

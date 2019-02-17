@@ -28,7 +28,7 @@ class Invoice
      * @param  PaystackInvoice  $invoice
      * @return void
      */
-    public function __construct($owner, PaystackInvoice $invoice)
+    public function __construct($owner, $invoice)
     {
         $this->owner = $owner;
         $this->invoice = $invoice;

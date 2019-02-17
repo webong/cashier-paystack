@@ -77,6 +77,7 @@ trait Billable
     }
     /**
      * Invoice the customer for the given amount (alias).
+     * Invoice the billable entity outside of regular billing cycle.
      *
      * @param  string  $description
      * @param  int  $amount
@@ -177,8 +178,8 @@ trait Billable
     public function findInvoice($id)
     {
         try {
-            $invoice = Invoice::find($id);
-            if ($invoice->customerDetails->id != $this->Paystack_id) {
+            $invoice = PaystackService::findInvoice($id);
+            if ($invoice->customer->customer_code != $this->paystack_id) {
                 return;
             }
             return new Invoice($this, $invoice);
@@ -220,9 +221,20 @@ trait Billable
      * @return \Illuminate\Support\Collection
      * @throws \Paystack\Exception\NotFound
      */
-    public function invoices($includePending = false, $parameters = []): Collection
+    public function invoices($options = []): Collection
     {
-        
+        $invoices = [];
+        $parameters = array_merge(['customer' => $this->asPaystackCustomer()->id], $options);
+        $paystackInvoices = PaystackService::fetchInvoices($parameters);
+        // Here we will loop through the Stripe invoices and create our own custom Invoice
+        // instances that have more helper methods and are generally more convenient to
+        // work with than the plain Stripe objects are. Then, we'll return the array.
+        if (! is_null($paystackInvoices && ! empty($paystackInvoices))) {
+            foreach ($paystackInvoices as $invoice) {
+                $invoices[] = new Invoice($this, $invoice);
+            }
+        }
+        return new Collection($invoices);   
     }
     
     /**
@@ -232,29 +244,24 @@ trait Billable
      * @return \Illuminate\Support\Collection
      * @throws \Paystack\Exception\NotFound
      */
-    public function invoicesIncludingPending(array $parameters = []): Collection
+    public function invoicesOnlyPending(array $parameters = []): Collection
     {
-        return $this->invoices(true, $parameters);
+        $parameters['status'] = 'pending';
+        return $this->invoices($parameters);
     }
 
-    /**
-     * Apply a coupon to the billable entity.
+     /**
+     * Get an array of the entity's invoices.
      *
-     * @param  string  $coupon
-     * @param  string  $subscription
-     * @param  bool  $removeOthers
-     * @return void
-     * @throws \InvalidArgumentException
+     * @param  array  $parameters
+     * @return \Illuminate\Support\Collection
+     * @throws \Paystack\Exception\NotFound
      */
-    public function applyCoupon($coupon, $subscription = 'default', $removeOthers = false)
+    public function invoicesOnlyPaid(array $parameters = []): Collection
     {
-        $subscription = $this->subscription($subscription);
-        if (! $subscription) {
-            throw new InvalidArgumentException("Unable to apply coupon. Subscription does not exist.");
-        }
-        $subscription->applyCoupon($coupon, $removeOthers);
-    }
-   
+        $parameters['paid'] = true;
+        return $this->invoices($parameters);
+    }   
     /**
      * Determine if the model is actively subscribed to one of the given plans.
      *
@@ -320,7 +327,7 @@ trait Billable
      */
     public function asPaystackCustomer()
     {
-        return Paystack::fetchCustomer($this->paystack_id);
+        return Paystack::fetchCustomer($this->paystack_id)['data'];
     }
 
     /**
