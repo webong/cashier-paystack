@@ -1,5 +1,5 @@
 # Cashier Paystack
-Cashier provides an expressive, fluent interface to Paystack's subscription invoicing services.
+Cashier provides an expressive, fluent interface to Paystack's subscription billing services.
 
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
