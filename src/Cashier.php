@@ -23,6 +23,17 @@ class Cashier
      * @var callable
      */
     protected static $formatCurrencyUsing;
+
+    /**
+     * Get the class name of the billable model.
+     *
+     * @return string
+     */
+    public static function paystackModel()
+    {
+        return getenv('PAYSTACK_MODEL') ?: config('paystack.model', 'App\\User');
+    }
+
     /**
      * Set the currency to be used when billing models.
      *

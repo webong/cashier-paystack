@@ -20,6 +20,10 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
+        if (! $this->hasPaystackId()) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
+
         $options['amount'] = $amount;
         $options['reference'] = $paystack->genTranxRef();
 
@@ -37,13 +41,12 @@ trait Billable
      *
      * @param  string  $charge
      * @param  array  $options
-     * @return \Stripe\Refund
      * @throws \InvalidArgumentException
      */
     public function refund($charge, array $options = [])
     {
         $options['charge'] = $charge;
-        return PaystackService::refund($options, ['api_key' => $this->getStripeKey()]);
+        return PaystackService::refund($options);
     }
 
     /**
@@ -56,7 +59,7 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->paystack_id) {
+        if (! $this->hasPaystackId()) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -70,7 +73,7 @@ trait Billable
             'currency' => $this->preferredCurrency(),
             'description' => $description,
         ], $options);
-        return Invoice::create($options);
+        return PaystackInvoice::create($options);
     }
     /**
      * Invoice the customer for the given amount (alias).
@@ -291,7 +294,7 @@ trait Billable
      * @param  array  $options
      * @throws \Exception
      */
-    public function createAsPaystackCustomer($token, array $options = [])
+    public function createAsPaystackCustomer($token = null, array $options = [])
     {
         $options = array_key_exists('email', $options)
         ? $options

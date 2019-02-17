@@ -5,8 +5,8 @@ use Carbon\Carbon;
 use Dompdf\Dompdf;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\Response;
-use Wisdomanthoni\Paystack\Transaction as PaystackTransaction;
 use Illuminate\Contracts\View\View as ViewContract;
+
 class Invoice
 {
     /**
@@ -16,22 +16,22 @@ class Invoice
      */
     protected $owner;
     /**
-     * The Paystack transaction instance.
+     * The Paystack invoice instance.
      *
-     * @var \Paystack\Transaction
+     * @var PaystackInvoice
      */
-    protected $transaction;
+    protected $invoice;
     /**
      * Create a new invoice instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $owner
-     * @param  \Paystack\Transaction  $transaction
+     * @param  PaystackInvoice  $invoice
      * @return void
      */
-    public function __construct($owner, PaystackTransaction $transaction)
+    public function __construct($owner, PaystackInvoice $invoice)
     {
         $this->owner = $owner;
-        $this->transaction = $transaction;
+        $this->invoice = $invoice;
     }
     /**
      * Get a Carbon date for the invoice.
@@ -41,7 +41,7 @@ class Invoice
      */
     public function date($timezone = null): Carbon
     {
-        $carbon = Carbon::instance($this->transaction->createdAt);
+        $carbon = Carbon::instance($this->invoice->createdAt);
         return $timezone ? $carbon->setTimezone($timezone) : $carbon;
     }
     /**
@@ -60,7 +60,7 @@ class Invoice
      */
     public function rawTotal()
     {
-        return max(0, $this->transaction->amount);
+        return max(0, $this->invoice->amount);
     }
     /**
      * Get the total of the invoice (before discounts).
@@ -70,7 +70,7 @@ class Invoice
     public function subtotal()
     {
         return $this->formatAmount(
-            max(0, $this->transaction->amount + $this->discountAmount())
+            max(0, $this->invoice->amount + $this->discountAmount())
         );
     }
     /**
@@ -80,7 +80,7 @@ class Invoice
      */
     public function hasAddOn()
     {
-        return count($this->transaction->addOns) > 0;
+        return count($this->invoice->addOns) > 0;
     }
     /**
      * Get the discount amount.
@@ -99,7 +99,7 @@ class Invoice
     public function addOnAmount()
     {
         $totalAddOn = 0;
-        foreach ($this->transaction->addOns as $addOn) {
+        foreach ($this->invoice->addOns as $addOn) {
             $totalAddOn += $addOn->amount;
         }
         return (float) $totalAddOn;
@@ -112,7 +112,7 @@ class Invoice
     public function addOns()
     {
         $addOns = [];
-        foreach ($this->transaction->addOns as $addOn) {
+        foreach ($this->invoice->addOns as $addOn) {
             $addOns[] = $addOn->id;
         }
         return $addOns;
@@ -124,7 +124,7 @@ class Invoice
      */
     public function hasDiscount()
     {
-        return count($this->transaction->discounts) > 0;
+        return count($this->invoice->discounts) > 0;
     }
     /**
      * Get the discount amount.
@@ -143,7 +143,7 @@ class Invoice
     public function discountAmount()
     {
         $totalDiscount = 0;
-        foreach ($this->transaction->discounts as $discount) {
+        foreach ($this->invoice->discounts as $discount) {
             $totalDiscount += $discount->amount;
         }
         return (float) $totalDiscount;
@@ -156,7 +156,7 @@ class Invoice
     public function coupons()
     {
         $coupons = [];
-        foreach ($this->transaction->discounts as $discount) {
+        foreach ($this->invoice->discounts as $discount) {
             $coupons[] = $discount->id;
         }
         return $coupons;
@@ -229,25 +229,25 @@ class Invoice
             'Content-Type' => 'application/pdf',
         ]);
     }
-    
+
     /**
-     * Get the Paystack transaction instance.
+     * Get the Paystack invoice instance.
      *
-     * @return \Paystack\Transaction
+     * @return \Paystack\invoice
      */
-    public function asPaystackTransaction()
+    public function asPaystackInvoice()
     {
-        return $this->transaction;
+        return $this->invoice;
     }
 
     /**
-     * Dynamically get values from the Paystack transaction.
+     * Dynamically get values from the Paystack invoice.
      *
      * @param  string  $key
      * @return mixed
      */
     public function __get($key)
     {
-        return $this->transaction->{$key};
+        return $this->invoice->{$key};
     }
 }

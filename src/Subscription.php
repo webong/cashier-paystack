@@ -1,15 +1,14 @@
 <?php
-namespace Wisdomanthoni\Cashier;
-
-use Exception;
+namespace Laravel\Cashier;
 use Carbon\Carbon;
 use LogicException;
-use InvalidArgumentException;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Unicodeveloper\Paystack\Facades\Paystack;
 class Subscription extends Model
 {
     /**
-     * The attributes that aren't mass assignable.
+     * The attributes that are not mass assignable.
      *
      * @var array
      */
@@ -24,13 +23,9 @@ class Subscription extends Model
         'created_at', 'updated_at',
     ];
     /**
-     * Indicates plan changes should be prorated.
-     *
-     * @var bool
-     */
-    protected $prorate = true;
-    /**
      * Get the user that owns the subscription.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user()
     {
@@ -38,12 +33,13 @@ class Subscription extends Model
     }
     /**
      * Get the model related to the subscription.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function owner()
     {
-        $model = getenv('PAYSTACK_MODEL') ?: config('paystack.model', 'App\\User');
-        $model = new $model;
-        return $this->belongsTo(get_class($model), $model->getForeignKey());
+        $class = Cashier::paystackModel();
+        return $this->belongsTo($class, (new $class)->getForeignKey());
     }
     /**
      * Determine if the subscription is active, on trial, or within its grace period.
@@ -64,6 +60,15 @@ class Subscription extends Model
         return is_null($this->ends_at) || $this->onGracePeriod();
     }
     /**
+     * Determine if the subscription is recurring and not on trial.
+     *
+     * @return bool
+     */
+    public function recurring()
+    {
+        return ! $this->onTrial() && ! $this->cancelled();
+    }
+    /**
      * Determine if the subscription is no longer active.
      *
      * @return bool
@@ -73,16 +78,22 @@ class Subscription extends Model
         return ! is_null($this->ends_at);
     }
     /**
+     * Determine if the subscription has ended and the grace period has expired.
+     *
+     * @return bool
+     */
+    public function ended()
+    {
+        return $this->cancelled() && ! $this->onGracePeriod();
+    }
+    /**
      * Determine if the subscription is within its trial period.
      *
      * @return bool
      */
     public function onTrial()
     {
-        if (! is_null($this->trial_ends_at)) {
-            return Carbon::today()->lt($this->trial_ends_at);
-        }
-        return false;
+        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
     }
     /**
      * Determine if the subscription is within its grace period after cancellation.
@@ -91,241 +102,45 @@ class Subscription extends Model
      */
     public function onGracePeriod()
     {
-        if (! is_null($endsAt = $this->ends_at)) {
-            return Carbon::now()->lt(Carbon::instance($endsAt));
-        }
-        return false;
-    }
-    /**
-     * Increment the quantity of the subscription.
-     *
-     * @param  int  $count
-     * @return $this
-     */
-    public function incrementQuantity($count = 1)
-    {
-        $this->updateQuantity($this->quantity + $count);
-        return $this;
-    }
-    /**
-     * Decrement the quantity of the subscription.
-     *
-     * @param  int  $count
-     * @return $this
-     */
-    public function decrementQuantity($count = 1)
-    {
-        $this->updateQuantity($this->quantity - $count);
-        return $this;
-    }
-    /**
-     * Update the quantity of the subscription.
-     *
-     * @param  int  $quantity
-     * @return $this
-     */
-    public function updateQuantity($quantity)
-    {
-        $quantity = max(0, $quantity - 1);
-        $addonName = $this->paystack_plan.'-quantity';
-        $options = ['remove' => [$addonName]];
-        if ($quantity > 0) {
-            $options = $this->quantity > 1
-                ? ['update' => [['existingId' => $addonName, 'quantity' => $quantity]]]
-                : ['add' => [['inheritedFromId' => $addonName, 'quantity' => $quantity]]];
-        }
-        PaystackService::update($this->Paystack_id, ['addOns' => $options]);
-        $this->quantity = $quantity + 1;
-        $this->save();
-        return $this;
-    }
-    /**
-     * Swap the subscription to a new Paystack plan.
-     *
-     * @param  string  $plan
-     * @return $this|\Laravel\Cashier\Subscription
-     * @throws \Exception
-     */
-    public function swap($plan)
-    {
-        if ($this->onGracePeriod() && $this->Paystack_plan === $plan) {
-            return $this->resume();
-        }
-        if (! $this->active()) {
-            return $this->owner->newSubscription($this->name, $plan)
-                                ->skipTrial()->create();
-        }
-        $plan = PaystackService::findPlan($plan);
-        if ($this->wouldChangeBillingFrequency($plan) && $this->prorate) {
-            return $this->swapAcrossFrequencies($plan);
-        }
-        $subscription = $this->asPaystackService();
-        $response = PaystackService::update($subscription->id, [
-            'planId' => $plan->id,
-            'price' => number_format($plan->price * (1 + ($this->owner->taxPercentage() / 100)), 2, '.', ''),
-            'neverExpires' => true,
-            'numberOfBillingCycles' => null,
-            'options' => [
-                'prorateCharges' => $this->prorate,
-            ],
-        ]);
-        if ($response->success) {
-            $this->fill([
-                'paystack_plan' => $plan->id,
-                'ends_at' => null,
-            ])->save();
-        } else {
-            throw new Exception('Paystack failed to swap plans: '.$response->message);
-        }
-        return $this;
-    }
-    /**
-     * Determine if the given plan would alter the billing frequency.
-     *
-     * @param  string  $plan
-     * @return bool
-     * @throws \Exception
-     */
-    protected function wouldChangeBillingFrequency($plan)
-    {
-        return $plan->billingFrequency !== PaystackService::findPlan($this->Paystack_plan)->billingFrequency;
-    }
-    /**
-     * Swap the subscription to a new Paystack plan with a different frequency.
-     *
-     * @param  string  $plan
-     * @return \Wisdomanthoni\Cashier\Subscription
-     * @throws \Exception
-     */
-    protected function swapAcrossFrequencies($plan): Subscription
-    {
-        $currentPlan = PaystackService::findPlan($this->Paystack_plan);
-        $discount = $this->switchingToMonthlyPlan($currentPlan, $plan)
-                                ? $this->getDiscountForSwitchToMonthly($currentPlan, $plan)
-                                : $this->getDiscountForSwitchToYearly();
-        $options = [];
-        if ($discount->amount > 0 && $discount->numberOfBillingCycles > 0) {
-            $options = ['discounts' => ['add' => [
-                [
-                    'inheritedFromId' => 'plan-credit',
-                    'amount' => (float) $discount->amount,
-                    'numberOfBillingCycles' => $discount->numberOfBillingCycles,
-                ],
-            ]]];
-        }
-        $this->cancelNow();
-        return $this->owner->newSubscription($this->name, $plan->id)
-            ->skipTrial()
-            ->create(null, [], $options);
-    }
-    /**
-     * Determine if the user is switching form yearly to monthly billing.
-     *
-     * @param  \Paystack\Plan  $currentPlan
-     * @param  \Paystack\Plan  $plan
-     * @return bool
-     */
-    protected function switchingToMonthlyPlan(Plan $currentPlan, Plan $plan)
-    {
-        return $currentPlan->billingFrequency == 12 && $plan->billingFrequency == 1;
-    }
-    /**
-     * Get the discount to apply when switching to a monthly plan.
-     *
-     * @param  \Paystack\Plan  $currentPlan
-     * @param  \Paystack\Plan  $plan
-     * @return object
-     */
-    protected function getDiscountForSwitchToMonthly(Plan $currentPlan, Plan $plan)
-    {
-        return (object) [
-            'amount' => $plan->price,
-            'numberOfBillingCycles' => floor(
-                $this->moneyRemainingOnYearlyPlan($currentPlan) / $plan->price
-            ),
-        ];
-    }
-    /**
-     * Calculate the amount of discount to apply to a swap to monthly billing.
-     *
-     * @param  \Paystack\Plan  $plan
-     * @return float
-     */
-    protected function moneyRemainingOnYearlyPlan(Plan $plan)
-    {
-        return ($plan->price / 365) * Carbon::today()->diffInDays(Carbon::instance(
-            $this->asPaystackService()->billingPeriodEndDate
-        ), false);
-    }
-    /**
-     * Get the discount to apply when switching to a yearly plan.
-     *
-     * @return object
-     */
-    protected function getDiscountForSwitchToYearly()
-    {
-        $amount = 0;
-        foreach ($this->asPaystackService()->discounts as $discount) {
-            if ($discount->id == 'plan-credit') {
-                $amount += (float) $discount->amount * $discount->numberOfBillingCycles;
-            }
-        }
-        return (object) [
-            'amount' => $amount,
-            'numberOfBillingCycles' => 1,
-        ];
-    }
-    /**
-     * Apply a coupon to the subscription.
-     *
-     * @param  string  $coupon
-     * @param  bool  $removeOthers
-     * @return void
-     */
-    public function applyCoupon($coupon, $removeOthers = false)
-    {
-        if (! $this->active()) {
-            throw new InvalidArgumentException("Unable to apply coupon. Subscription not active.");
-        }
-        PaystackService::update($this->Paystack_id, [
-            'discounts' => [
-                'add' => [[
-                    'inheritedFromId' => $coupon,
-                ]],
-                'remove' => $removeOthers ? $this->currentDiscounts() : [],
-            ],
-        ]);
+        return $this->ends_at && $this->ends_at->isFuture();
     }
     
     /**
-     * Get the current discounts for the subscription.
+     * Force the trial to end immediately.
      *
-     * @return array
+     * This method must be combined with swap, resume, etc.
+     *
+     * @return $this
      */
-    protected function currentDiscounts()
+    public function skipTrial()
     {
-        return collect($this->asPaystackService()->discounts)->map(function ($discount) {
-            return $discount->id;
-        })->all();
+        $this->trial_ends_at = null;
+        return $this;
     }
+    
     /**
-     * Cancel the subscription.
+     * Cancel the subscription at the end of the billing period.
      *
      * @return $this
      */
     public function cancel()
     {
-        $subscription = $this->asPaystackService();
+        $subscription = $this->asPaystackSubscription();
+
+        PaystackService::disableSubscription([
+            'token' => $subscription->email_token,
+            'code' => $this->paystack_id,
+        ]);
+        
+        // If the user was on trial, we will set the grace period to end when the trial
+        // would have ended. Otherwise, we'll retrieve the end of the billing period
+        // period and make that the end of the grace period for this current user.
         if ($this->onTrial()) {
-            PaystackService::cancel($subscription->id);
-            $this->markAsCancelled();
+            $this->ends_at = $this->trial_ends_at;
         } else {
-            PaystackService::update($subscription->id, [
-                'numberOfBillingCycles' => $subscription->currentBillingCycle,
-            ]);
-            $this->ends_at = $subscription->billingPeriodEndDate;
-            $this->save();
+            $this->ends_at = Carbon::now();
         }
+        $this->save();
         return $this;
     }
     /**
@@ -335,12 +150,10 @@ class Subscription extends Model
      */
     public function cancelNow()
     {
-        $subscription = $this->asPaystackService();
-        PaystackService::cancel($subscription->id);
+        $this->cancel();
         $this->markAsCancelled();
         return $this;
     }
-
     /**
      * Mark the subscription as cancelled.
      *
@@ -350,7 +163,6 @@ class Subscription extends Model
     {
         $this->fill(['ends_at' => Carbon::now()])->save();
     }
-    
     /**
      * Resume the cancelled subscription.
      *
@@ -362,11 +174,18 @@ class Subscription extends Model
         if (! $this->onGracePeriod()) {
             throw new LogicException('Unable to resume subscription that is not within grace period.');
         }
-        $subscription = $this->asPaystackService();
-        PaystackService::update($subscription->id, [
-            'neverExpires' => true,
-            'numberOfBillingCycles' => null,
+        $subscription = $this->asPaystackSubscription();
+        // To resume the subscription we need to set the plan parameter on the Paystack
+        // subscription object. This will force Paystack to resume this subscription
+        // where we left off. Then, we'll set the proper trial ending timestamp.
+
+        PaystackService::enableSubscription([
+            'token' => $subscription->email_token,
+            'code' => $this->paystack_id,
         ]);
+        // Finally, we will remove the ending timestamp from the user's record in the
+        // local database to indicate that the subscription is active again and is
+        // no longer "cancelled". Then we will save this record in the database.
         $this->fill(['ends_at' => null])->save();
         return $this;
     }
@@ -375,9 +194,21 @@ class Subscription extends Model
      * Get the subscription as a Paystack subscription object.
      *
      * @return \Paystack\Subscription
+     * @throws \LogicException
      */
-    public function asPaystackService(): PaystackService
+    public function asPaystackSubscription()
     {
-        return PaystackService::find($this->Paystack_id);
+        $subscriptions = PaystackService::getCustomerSubscriptions($this->user->paystack_id);
+
+        if (! $subscriptions || empty($subscriptions)) {
+            throw new LogicException('The Paystack customer does not have any subscriptions.');
+        }
+        foreach($subscriptions as $subscription ) {
+            if($subscription->subscription_code == $this->paystack_id ) {
+                return $subscription;
+            }
+        }
+
+        throw new LogicException('The Paystack subscription does not exist for this customer.');
     }
 }
