@@ -41,7 +41,7 @@ class Invoice
      */
     public function date($timezone = null): Carbon
     {
-        $carbon = Carbon::instance($this->invoice->createdAt);
+        $carbon = Carbon::instance($this->invoice->created_at);
         return $timezone ? $carbon->setTimezone($timezone) : $carbon;
     }
     /**
@@ -112,8 +112,8 @@ class Invoice
     public function addOns()
     {
         $addOns = [];
-        foreach ($this->invoice->addOns as $addOn) {
-            $addOns[] = $addOn->id;
+        foreach ($this->invoice->line_items as $addOn) {
+            $addOns[] = $addOn;
         }
         return $addOns;
     }
@@ -143,9 +143,7 @@ class Invoice
     public function discountAmount()
     {
         $totalDiscount = 0;
-        foreach ($this->invoice->discounts as $discount) {
-            $totalDiscount += $discount->amount;
-        }
+        // Paystack give us discount amount
         return (float) $totalDiscount;
     }
     /**
@@ -155,11 +153,7 @@ class Invoice
      */
     public function coupons()
     {
-        $coupons = [];
-        foreach ($this->invoice->discounts as $discount) {
-            $coupons[] = $discount->id;
-        }
-        return $coupons;
+        // Coupon Not Available
     }
     /**
      * Get the discount amount for the invoice.
