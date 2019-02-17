@@ -216,7 +216,7 @@ if ($user->subscription('main')->onTrial()) {
 }
 ```
 
-## Without Billing Up Front
+### Without Billing Up Front
 If you would like to offer trial periods without collecting the user's payment method information up front, you may set the trial_ends_at column on the user record to your desired trial ending date. This is typically done during user registration:
 ```php
 $user = User::create([
