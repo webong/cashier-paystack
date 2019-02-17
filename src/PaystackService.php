@@ -1,8 +1,8 @@
 <?php
 namespace Wisomanthoni\Cashier;
 
-use Illuminate\Http\Request;
-use Unicodeveloper\Paystack\Facades\Paystack;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Config;
 class PaystackService {
     /**
      * Issue Secret Key from your Paystack Dashboard
