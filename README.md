@@ -82,7 +82,7 @@ Once the migrations have been created, run the migrate Artisan command.
 ## Billable Model
 Next, add the Billable trait to your model definition. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating credit card information:
 ```php
-use Laravel\Cashier\Billable;
+use Wisdomanthoni\Cashier\Billable;
 
 class User extends Authenticatable
 {
