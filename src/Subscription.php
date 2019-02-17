@@ -138,7 +138,9 @@ class Subscription extends Model
         if ($this->onTrial()) {
             $this->ends_at = $this->trial_ends_at;
         } else {
-            $this->ends_at = Carbon::now();
+            $this->ends_at = Carbon::createFromTimestamp(
+                $subscription->next_payment_date
+            );
         }
         $this->save();
         return $this;
