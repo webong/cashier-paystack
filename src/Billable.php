@@ -68,7 +68,7 @@ trait Billable
         }
 
         $options = array_merge([
-            'customer' => $this->paystack_id,
+            'customer' => $this->paystack_code,
             'amount' => $amount,
             'currency' => $this->preferredCurrency(),
             'description' => $description,
@@ -179,7 +179,7 @@ trait Billable
     {
         try {
             $invoice = PaystackService::findInvoice($id);
-            if ($invoice->customer->customer_code != $this->paystack_id) {
+            if ($invoice->customer->customer_code != $this->paystack_code) {
                 return;
             }
             return new Invoice($this, $invoice);
@@ -313,7 +313,7 @@ trait Billable
             throw new Exception('Unable to create Paystack customer: '.$response->message);
         }
         
-        $this->paystack_id = $response->data->customer_code;
+        $this->paystack_code = $response->data->customer_code;
         $this->save();
 
         return $response->data;   
@@ -327,7 +327,7 @@ trait Billable
      */
     public function asPaystackCustomer()
     {
-        return Paystack::fetchCustomer($this->paystack_id)['data'];
+        return Paystack::fetchCustomer($this->paystack_code)['data'];
     }
 
     /**
@@ -337,7 +337,7 @@ trait Billable
      */
     public function hasPaystackId()
     {
-        return ! is_null($this->paystack_id);
+        return ! is_null($this->paystack_code);
     }
 
     /**
