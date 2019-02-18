@@ -61,6 +61,7 @@ Before using Cashier, we'll also need to prepare the database. We need to add se
 ```php
 Schema::table('users', function ($table) {
     $table->string('paystack_id')->nullable()->collation('utf8mb4_bin');
+    $table->string('paystack_code')->nullable()->collation('utf8mb4_bin');
     $table->timestamp('trial_ends_at')->nullable();
 });
 ```

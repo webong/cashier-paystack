@@ -20,7 +20,7 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
-        if (! $this->hasPaystackId()) {
+        if (! $this->hasPaystackCode()) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -59,7 +59,7 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->hasPaystackId()) {
+        if (! $this->hasPaystackCode()) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -327,7 +327,7 @@ trait Billable
      */
     public function asPaystackCustomer()
     {
-        return Paystack::fetchCustomer($this->paystack_code)['data'];
+        return Paystack::fetchCustomer($this->paystack_id)['data'];
     }
 
     /**
@@ -336,6 +336,16 @@ trait Billable
      * @return bool
      */
     public function hasPaystackId()
+    {
+        return ! is_null($this->paystack_id);
+    }
+
+     /**
+     * Determine if the entity has a Paystack customer code.
+     *
+     * @return bool
+     */
+    public function hasPaystackCode()
     {
         return ! is_null($this->paystack_code);
     }
