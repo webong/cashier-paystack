@@ -144,7 +144,7 @@ trait Billable
             return $subscription->valid();
         }
         return $subscription->valid() &&
-               $subscription->Paystack_plan === $plan;
+               $subscription->paystack_plan === $plan;
     }
     /**
      * Get a subscription instance by name.
@@ -219,16 +219,20 @@ trait Billable
      * @param  bool  $includePending
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
+     * @throws \Exception
      */
     public function invoices($options = []): Collection
     {
+        if (! $this->hasPaystackId()) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
+
         $invoices = [];
-        $parameters = array_merge(['customer' => $this->asPaystackCustomer()->id], $options);
+        $parameters = array_merge(['customer' => $this->paystack_id], $options);
         $paystackInvoices = PaystackService::fetchInvoices($parameters);
-        // Here we will loop through the Stripe invoices and create our own custom Invoice
+        // Here we will loop through the Paystack invoices and create our own custom Invoice
         // instances that have more helper methods and are generally more convenient to
-        // work with than the plain Stripe objects are. Then, we'll return the array.
+        // work with than the plain Paystack objects are. Then, we'll return the array.
         if (! is_null($paystackInvoices && ! empty($paystackInvoices))) {
             foreach ($paystackInvoices as $invoice) {
                 $invoices[] = new Invoice($this, $invoice);
@@ -312,7 +316,7 @@ trait Billable
         if (! $response->status) {
             throw new Exception('Unable to create Paystack customer: '.$response->message);
         }
-        
+        $this->paystack_id = $response->data->id;        
         $this->paystack_code = $response->data->customer_code;
         $this->save();
 

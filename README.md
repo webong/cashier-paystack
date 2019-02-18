@@ -1,6 +1,11 @@
 # Cashier Paystack
 Cashier provides an expressive, fluent interface to Paystack's subscription billing services.
 
+### Paystack Caveats
+Paystack does not support the increment and decrement methods on subscriptions.
+Paystack does not support upgrading or downgrading the underlying subscriptions plan
+Paystack does not support percentage based discounts.
+
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
 
@@ -60,7 +65,7 @@ Before using Cashier, we'll also need to prepare the database. We need to add se
 
 ```php
 Schema::table('users', function ($table) {
-    $table->string('paystack_id')->nullable()->collation('utf8mb4_bin');
+    $table->string('paystack_id')->nullable();
     $table->string('paystack_code')->nullable()->collation('utf8mb4_bin');
     $table->timestamp('trial_ends_at')->nullable();
 });
@@ -70,8 +75,8 @@ Schema::create('subscriptions', function ($table) {
     $table->increments('id');
     $table->unsignedInteger('user_id');
     $table->string('name');
-    $table->string('paystack_id')->collation('utf8mb4_bin');
-    $table->string('paystack_Paystack');
+    $table->string('paystack_code')->collation('utf8mb4_bin');
+    $table->string('paystack_plan')->nullable();
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
     $table->timestamp('ends_at')->nullable();
@@ -90,6 +95,14 @@ class User extends Authenticatable
     use Billable;
 }
 ```
+## Currency Configuration
+The default Cashier currency is United States Dollars (USD). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
+```php
+use Wisdomanthoni\Cashier\Cashier;
+
+Cashier::useCurrency('ngn', '₦');
+Cashier::useCurrency('ghs', 'GH₵');
+```
 
 ## Subscriptions
 
@@ -99,7 +112,8 @@ To create a subscription, first retrieve an instance of your billable model, whi
 ```php
 $user = User::find(1);
 $plan_name = // Paystack type e.g default, main, yakata
-$plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+$plan_code = // Paystack plan code  e.g PLN_gx2wn530m0i3w3m
+$auth_token = // Paystack card auth token for customer
 $user->newSubscription('main', $plan_code)->create($auth_token);
 // Accepts an auth token for the customer
 $user->newSubscription('main', $plan_code)->create(); 
@@ -107,7 +121,7 @@ $user->newSubscription('main', $plan_code)->create();
 ```
 The first argument passed to the newSubscription method should be the name of the subscription. If your application only offers a single subscription, you might call this main or primary. The second argument is the specific Paystack Paystack code the user is subscribing to. This value should correspond to the Paystack's code identifier in Paystack.
 
-The create method, which may accept a authorization token, will begin the subscription as well as update your database with the customer ID and other relevant billing information.
+The create method, which accepts a Paystack authorization token, will begin the subscription as well as update your database with the customer/user ID and other relevant billing information.
 
 Additional User Details
 If you would like to specify additional customer details, you may do so by passing them as the second argument to the create method:
@@ -243,7 +257,9 @@ Once you are ready to create an actual subscription for the user, you may use th
 ```php
 $user = User::find(1);
 $plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+// With Paystack card auth token for customer
 $user->newSubscription('main', $plan_code)->create($auth_token);
+$user->newSubscription('main', $plan_code)->create();
 ```
 
 ## Customers

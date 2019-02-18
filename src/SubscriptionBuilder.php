@@ -3,7 +3,9 @@ namespace Wisdomanthoni\Cashier;
 
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Unicodeveloper\Paystack\Facades\Paystack;
+
 class SubscriptionBuilder
 {
     /**
@@ -110,12 +112,17 @@ class SubscriptionBuilder
      */
     public function create($token = null, array $options = [])
     {
-        $customer = $this->getPaystackCustomer($token, $options);
+        $customer = $this->getPaystackCustomer($options);
+
+        if(is_null($token))
+        {
+          // $customer->authorization->
+        }
 
         if ($this->coupon) {
             // TODO: coupon feature
         }
-        $response = PaystackService::createSubscription($this->buildPayload($token, $customer));
+        $response = PaystackService::createSubscription($this->buildPayload($customer));
 
         if (! $response->status) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
@@ -158,7 +165,7 @@ class SubscriptionBuilder
         }
 
         $data = [
-            "customer" => $customer, //Customer email or code
+            "customer" => $this->owner->paystack_code, //Customer email or code
             "plan" => $this->plan,
             "start_date" => $startDate,
         ];
@@ -173,17 +180,16 @@ class SubscriptionBuilder
     /**
      * Get the Paystack customer instance for the current user and token.
      *
-     * @param  string|null  $token
      * @param  array  $options
-     * @return \Paystack\Customer
+     * @return \Illuminate\Support\Collection
      */
-    protected function getPaystackCustomer($token = null, array $options = [])
+    protected function getPaystackCustomer(array $options = [])
     {
-        if (! $this->owner->paystack_id) {
+        if (! $this->owner->paystack_id || ! $this->owner->paystack_code) {
             $customer = $this->owner->createAsPaystackCustomer($token, $options);
         } else {
             $customer = $this->owner->asPaystackCustomer();
         }
-        return $customer->customer_code;
+        return Collection($customer);
     }
 }

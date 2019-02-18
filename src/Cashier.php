@@ -44,6 +44,7 @@ class Cashier
      */
     public static function useCurrency($currency, $symbol = null)
     {
+        $currency = strtolower($currency);
         static::$currency = $currency;
         static::useCurrencySymbol($symbol ?: static::guessCurrencySymbol($currency));
     }
