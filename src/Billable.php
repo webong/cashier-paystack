@@ -24,16 +24,25 @@ trait Billable
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
+        $options = array_merge([
+            'currency' => $this->preferredCurrency(),
+            'email' => $this->email,
+            'reference' => Paystack::genTranxRef(),
+        ], $options);
+
         $options['amount'] = $amount;
-        $options['reference'] = $paystack->genTranxRef();
-
-        if (! array_key_exists('email', $options) && $this->email) {
-            $options['email'] = $this->email;
-        }
-
-        $response = Paystack::makePaymentRequest($options);
-        $response->url = $response->getResponse()['data']['authorization_url'];
-        return $response->getData(); 
+        
+        if (! array_key_exists('authorization', $options)) {
+            $response = PaystackService::makeAuthorizationCharge($options);
+            if (! $response->success) {
+                throw new Exception('Paystack was unable to perform a charge: '.$response->message);
+            }    
+            return $response;
+        } else {
+            $response = Paystack::makePaymentRequest($options);
+            $response->url = $response->getResponse()['data']['authorization_url'];
+            return $response->getData();
+        } 
     }
 
     /**
@@ -43,7 +52,7 @@ trait Billable
      * @param  array  $options
      * @throws \InvalidArgumentException
      */
-    public function refund($charge, array $options = [])
+    public function refund($tra, array $options = [])
     {
         $options['charge'] = $charge;
         return PaystackService::refund($options);

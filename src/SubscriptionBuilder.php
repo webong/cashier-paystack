@@ -114,15 +114,10 @@ class SubscriptionBuilder
     {
         $customer = $this->getPaystackCustomer($options);
 
-        if(is_null($token))
-        {
-          // $customer->authorization->
-        }
-
         if ($this->coupon) {
             // TODO: coupon feature
         }
-        $response = PaystackService::createSubscription($this->buildPayload($customer));
+        $response = PaystackService::createSubscription($this->buildPayload());
 
         if (! $response->status) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
@@ -143,14 +138,14 @@ class SubscriptionBuilder
     }
     
     /**
-     * Get the base subscription payload for Paystack.
+     * Get the subscription payload data for Paystack.
      *
      * @param  $customer
      * @param  array  $options
      * @return array
      * @throws \Exception
      */
-    protected function buildPayload($token = null, $customer)
+    protected function buildPayload()
     {
         $response = Paystack::fetchPlan($this->plan);
 
