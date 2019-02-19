@@ -276,6 +276,23 @@ trait Billable
         return $this->invoices($parameters);
     }   
     /**
+     * Get a collection of the entity's cards.
+     *
+     * @param  array  $parameters
+     * @return \Illuminate\Support\Collection
+     */
+    public function cards($parameters = [])
+    {
+        $cards = [];
+        $paystackCards = $this->asPaystackCustomer()->authorizations;
+        if (! is_null($paystackCards)) {
+            foreach ($paystackCards as $card) {
+                $cards[] = new Card($this, $card);
+            }
+        }
+        return new Collection($cards);
+    }
+    /**
      * Determine if the model is actively subscribed to one of the given plans.
      *
      * @param  array|string  $plans
@@ -362,17 +379,6 @@ trait Billable
     {
         return ! is_null($this->paystack_code);
     }
-
-    /**
-     * Get the tax percentage to apply to the subscription.
-     *
-     * @return int
-     */
-    public function taxPercentage()
-    {
-        return 0;
-    }
-
 
     /**
      * Get the Paystack supported currency used by the entity.
