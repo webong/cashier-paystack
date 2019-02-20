@@ -1,8 +1,8 @@
 <?php
-namespace Laravel\Cashier;
+namespace Wisdomanthoni\Cashier;
+
 use Carbon\Carbon;
 use LogicException;
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Unicodeveloper\Paystack\Facades\Paystack;
 class Subscription extends Model

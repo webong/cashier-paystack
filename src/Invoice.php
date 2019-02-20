@@ -25,7 +25,7 @@ class Invoice
      * Create a new invoice instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $owner
-     * @param  PaystackInvoice  $invoice
+     * @param   $invoice
      * @return void
      */
     public function __construct($owner, $invoice)
@@ -78,63 +78,46 @@ class Invoice
      *
      * @return bool
      */
-    public function hasAddOn()
+    public function hasItems()
     {
-        return count($this->invoice->addOns) > 0;
+        return count($this->invoice->items) > 0;
     }
     /**
      * Get the discount amount.
      *
      * @return string
      */
-    public function addOn()
+    public function item()
     {
-        return $this->formatAmount($this->addOnAmount());
+        return $this->formatAmount($this->itemAmount());
     }
     /**
-     * Get the raw add-on amount.
+     * Get the raw item amount.
      *
      * @return float
      */
-    public function addOnAmount()
+    public function itemAmount()
     {
         $totalAddOn = 0;
-        foreach ($this->invoice->addOns as $addOn) {
-            $totalAddOn += $addOn->amount;
+        foreach ($this->invoice->items as $item) {
+            $totalItemAmount += $item->amount;
         }
-        return (float) $totalAddOn;
+        return (float) $totalItemAmount;
     }
     /**
-     * Get the add-on codes applied to the invoice.
+     * Get the items applied to the invoice.
      *
      * @return array
      */
-    public function addOns()
+    public function items()
     {
-        $addOns = [];
-        foreach ($this->invoice->line_items as $addOn) {
-            $addOns[] = $addOn;
+        $items = [];
+        foreach ($this->invoice->line_items as $item) {
+            $items[] = $item;
         }
-        return $addOns;
+        return $items;
     }
-    /**
-     * Determine if the invoice has a discount.
-     *
-     * @return bool
-     */
-    public function hasDiscount()
-    {
-        return count($this->invoice->discounts) > 0;
-    }
-    /**
-     * Get the discount amount.
-     *
-     * @return string
-     */
-    public function discount()
-    {
-        return $this->formatAmount($this->discountAmount());
-    }
+   
     /**
      * Get the raw discount amount.
      *
@@ -145,24 +128,6 @@ class Invoice
         $totalDiscount = 0;
         // Paystack give us discount amount
         return (float) $totalDiscount;
-    }
-    /**
-     * Get the coupon codes applied to the invoice.
-     *
-     * @return array
-     */
-    public function coupons()
-    {
-        // Coupon Not Available
-    }
-    /**
-     * Get the discount amount for the invoice.
-     *
-     * @return string
-     */
-    public function amountOff()
-    {
-        return $this->discount();
     }
     /**
      * Format the given amount into a string based on the user's preferences.

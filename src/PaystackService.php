@@ -147,26 +147,4 @@ class PaystackService {
         return self::setHttpResponse('/subscription/disable', 'POST', $data)->getResponse();
     }
 
-    public static function getCustomerSubscriptions($customer_id)
-    {
-        $response = self::setHttpResponse('/customer/'. $customer_id, 'GET', [])->getData();
-
-        return $response->subscriptions;
-
-    }
-
-    public static function getCustomerTransactions($customer_id)
-    {
-        $response = self::setHttpResponse('/customer/'. $customer_id, 'GET', [])->getData();
-
-        return $response->transactions;
-
-    }
-
-    public static function getCustomerAuthorizations($customer_id)
-    {
-        $response = self::setHttpResponse('/customer/'. $customer_id, 'GET', [])->getData();
-
-        return $response->authorizations;
-    }
 }
