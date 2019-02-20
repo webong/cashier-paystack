@@ -20,10 +20,6 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
-        if (! $this->hasPaystackCode()) {
-            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
-        }
-
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'email' => $this->email,
@@ -32,17 +28,7 @@ trait Billable
 
         $options['amount'] = $amount;
         
-        if (! array_key_exists('authorization', $options)) {
-            $response = PaystackService::makeAuthorizationCharge($options);
-            if (! $response->success) {
-                throw new Exception('Paystack was unable to perform a charge: '.$response->message);
-            }    
-            return $response;
-        } else {
-            $response = Paystack::makePaymentRequest($options);
-            $response->url = $response->getResponse()['data']['authorization_url'];
-            return $response->getData();
-        } 
+        return Paystack::getAuthorizationResponse($options);  
     }
 
     /**
@@ -50,12 +36,14 @@ trait Billable
      *
      * @param  string  $charge
      * @param  array  $options
+     * @return $response
      * @throws \InvalidArgumentException
      */
-    public function refund($tra, array $options = [])
+    public function refund($charge, array $options = [])
     {
         $options['charge'] = $charge;
-        return PaystackService::refund($options);
+        $response = PaystackService::refund($options);
+        return $response;
     }
 
     /**
@@ -68,7 +56,7 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->hasPaystackCode()) {
+        if (! $this->hasPaystackId()) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -77,7 +65,7 @@ trait Billable
         }
 
         $options = array_merge([
-            'customer' => $this->paystack_code,
+            'customer' => $this->paystack_id,
             'amount' => $amount,
             'currency' => $this->preferredCurrency(),
             'description' => $description,
@@ -343,7 +331,6 @@ trait Billable
             throw new Exception('Unable to create Paystack customer: '.$response->message);
         }
         $this->paystack_id = $response->data->id;        
-        $this->paystack_code = $response->data->customer_code;
         $this->save();
 
         return $response->data;   
@@ -368,16 +355,6 @@ trait Billable
     public function hasPaystackId()
     {
         return ! is_null($this->paystack_id);
-    }
-
-     /**
-     * Determine if the entity has a Paystack customer code.
-     *
-     * @return bool
-     */
-    public function hasPaystackCode()
-    {
-        return ! is_null($this->paystack_code);
     }
 
     /**
