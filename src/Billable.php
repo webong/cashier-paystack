@@ -16,6 +16,7 @@ trait Billable
      *
      * @param  int  $amount
      * @param  array  $options
+     * @return $response
      * @throws \Exception
      */
     public function charge($amount, array $options = [])
@@ -24,11 +25,13 @@ trait Billable
             'currency' => $this->preferredCurrency(),
             'email' => $this->email,
             'reference' => Paystack::genTranxRef(),
+            'authorization_code' => $this->paystack_auth_code
         ], $options);
 
         $options['amount'] = $amount;
         
-        return Paystack::getAuthorizationResponse($options);  
+        $response = PaystackService::chargeAuthorization($options);  
+        return $response;
     }
 
     /**
@@ -56,7 +59,7 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->hasPaystackId()) {
+        if (! $this->paystack_id) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -69,7 +72,9 @@ trait Billable
             'amount' => $amount,
             'currency' => $this->preferredCurrency(),
             'description' => $description,
+            'has_invoice' => true,
         ], $options);
+
         return PaystackInvoice::create($options);
     }
     /**
