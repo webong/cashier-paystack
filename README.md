@@ -65,8 +65,9 @@ Before using Cashier, we'll also need to prepare the database. We need to add se
 
 ```php
 Schema::table('users', function ($table) {
-    $table->string('paystack_id')->nullable();
-    $table->string('paystack_code')->nullable()->collation('utf8mb4_bin');
+    $table->string('paystack_id')->nullable()->collation('utf8mb4_bin');
+    $table->string('card_brand')->nullable();
+    $table->string('card_last_four', 4)->nullable();
     $table->timestamp('trial_ends_at')->nullable();
 });
 ```
@@ -75,7 +76,7 @@ Schema::create('subscriptions', function ($table) {
     $table->increments('id');
     $table->unsignedInteger('user_id');
     $table->string('name');
-    $table->string('paystack_code')->collation('utf8mb4_bin');
+    $table->string('paystack_id')->collation('utf8mb4_bin');
     $table->string('paystack_plan')->nullable();
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
