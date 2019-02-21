@@ -8,6 +8,7 @@ use Wisdomanthoni\Cashier\Cashier;
 use Wisdomanthoni\Cashier\Subscription;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Symfony\Component\HttpFoundation\Response;
+use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
 
 
 class WebhookController extends Controller
@@ -19,9 +20,7 @@ class WebhookController extends Controller
      */
     public function __construct()
     {
-        if (config('paystack.secret')) {
-            $this->middleware(VerifyWebhookSignature::class);
-        }
+        $this->middleware(VerifyWebhookSignature::class);
     }
     /**
      * Handle a Stripe webhook call.
