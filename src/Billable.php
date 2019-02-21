@@ -23,7 +23,6 @@ trait Billable
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'reference' => Paystack::genTranxRef(),
-            'authorization_code' => $this->paystack_auth_code
         ], $options);
         
         $options['amount'] = $amount;
