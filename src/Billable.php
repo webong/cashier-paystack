@@ -16,22 +16,26 @@ trait Billable
      *
      * @param  int  $amount
      * @param  array  $options
-     * @return $response
-     * @throws \Exception
+     * @throws \InvalidArgumentException
      */
     public function charge($amount, array $options = [])
     {
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
-            'email' => $this->email,
             'reference' => Paystack::genTranxRef(),
             'authorization_code' => $this->paystack_auth_code
         ], $options);
-
-        $options['amount'] = $amount;
         
-        $response = PaystackService::chargeAuthorization($options);  
-        return $response;
+        $options['amount'] = $amount;
+
+        if (! array_key_exists('authorization_code', $options) && $this->paystack_id) {
+            $options['email'] = $this->email;
+        }
+        if (! array_key_exists('authorization_code', $options) && ! array_key_exists('email', $options)) {
+            throw new InvalidArgumentException('No payment authorization code provided.');
+        }
+        
+       return PaystackService::chargeAuthorization($options);  
     }
 
     /**
