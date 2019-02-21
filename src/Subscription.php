@@ -129,7 +129,7 @@ class Subscription extends Model
 
         PaystackService::disableSubscription([
             'token' => $subscription->email_token,
-            'code' => $this->paystack_code,
+            'code'  => $subscription->subscription_code,
         ]);
         
         // If the user was on trial, we will set the grace period to end when the trial
@@ -183,7 +183,7 @@ class Subscription extends Model
 
         PaystackService::enableSubscription([
             'token' => $subscription->email_token,
-            'code' => $this->paystack_code,
+            'code'  => $subscription->subscription_code,
         ]);
         // Finally, we will remove the ending timestamp from the user's record in the
         // local database to indicate that the subscription is active again and is
@@ -199,13 +199,13 @@ class Subscription extends Model
      */
     public function asPaystackSubscription()
     {
-        $subscriptions = Paystack::getCustomerSubscriptions($this->user->paystack_id);
+        $subscriptions = PaystackService::customerSubscriptions($this->user->paystack_id);
 
         if (! $subscriptions || empty($subscriptions)) {
             throw new LogicException('The Paystack customer does not have any subscriptions.');
         }
         foreach($subscriptions as $subscription ) {
-            if($subscription->subscription_code == $this->paystack_code ) {
+            if($subscription->id == $this->paystack_id ) {
                 return $subscription;
             }
         }

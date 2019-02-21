@@ -136,6 +136,12 @@ class PaystackService {
         return self::setHttpResponse('/customer', 'POST', $data)->getResponse();
     }
 
+    public static function customerSubscriptions($customer_id)
+    {
+        $data = ['customer' => $customer_id];
+        return self::setHttpResponse('/customer', 'POST', $data)->getResponse();
+    }
+
     /**
      * Enable a subscription using the subscription code and token
      * @return array

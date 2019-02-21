@@ -100,11 +100,17 @@ class SubscriptionBuilder
      * @return \Wisdomanthoni\Cashier\Subscription
      * @throws \Exception
      */
-    public function create($token = null, array $options = [])
+    public function create($token = null, array $customerOptions = [], array $subscriptionOptions = [])
     {
-        $customer = $this->getPaystackCustomer($token, $options);
-
-        $subscription = PaystackService::createSubscription($this->buildPayload());
+        $payload = $this->getSubscriptionPayload(
+            $this->getPaystackCustomer($token, $customerOptions), $subscriptionOptions
+        );
+        // Set the desired authorization you wish to use for this subscription here. 
+        // If this is not supplied, the customer's most recent authorization would be used
+        if (isset($token)) {
+            $payload['authorization'] = $token;
+        }
+        $subscription = PaystackService::createSubscription($payload);
 
         if (! $subscription->status) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
@@ -116,31 +122,13 @@ class SubscriptionBuilder
         }
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
-            'paystack_id'   => $response->data->subscription_code,
+            'paystack_id'   => $response->data->id,
             'paystack_plan' => $this->plan,
             'quantity' => 1,
             'trial_ends_at' => $trialEndsAt,
             'ends_at' => null,
         ]);
     }
-     
-    /**
-     * Get the Paystack customer instance for the current user and token.
-     *
-     * @param  string|null  $token
-     * @param  array  $options
-     * @return $customer
-     */
-    protected function getPaystackCustomer($token = null, array $options = [])
-    {
-        if (! $this->owner->paystack_id || ! $this->owner->paystack_code) {
-            $customer = $this->owner->createAsPaystackCustomer($options);
-        } else {
-            $customer = $this->owner->asPaystackCustomer();
-        }
-        return $customer;
-    }
-
      /**
      * Get the subscription payload data for Paystack.
      *
@@ -149,7 +137,7 @@ class SubscriptionBuilder
      * @return array
      * @throws \Exception
      */
-    protected function buildPayload()
+    protected function getSubscriptionPayload($customer, array $options = [])
     {
         $response = Paystack::fetchPlan($this->plan);
 
@@ -164,15 +152,27 @@ class SubscriptionBuilder
         }
 
         $data = [
-            "customer" => $this->owner->paystack_code, //Customer email or code
+            "customer" => $customer->customer_code, //Customer email or code
             "plan" => $this->plan,
             "start_date" => $startDate,
         ];
 
-        // if (isset($token)) {
-        //     $data['authorization'] = $token;
-        // }
-
         return $data;
+    }
+    /**
+     * Get the Paystack customer instance for the current user and token.
+     *
+     * @param  string|null  $token
+     * @param  array  $options
+     * @return $customer
+     */
+    protected function getPaystackCustomer($token = null, array $options = [])
+    {
+        if (! $this->owner->paystack_id) {
+            $customer = $this->owner->createAsPaystackCustomer($options);
+        } else {
+            $customer = $this->owner->asPaystackCustomer();
+        }
+        return $customer;
     }
 }

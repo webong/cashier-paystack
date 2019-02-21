@@ -187,7 +187,7 @@ trait Billable
     {
         try {
             $invoice = PaystackService::findInvoice($id);
-            if ($invoice->customer->customer_code != $this->paystack_code) {
+            if ($invoice->customer->id != $this->paystack_id) {
                 return;
             }
             return new Invoice($this, $invoice);
