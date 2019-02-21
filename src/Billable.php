@@ -77,7 +77,6 @@ trait Billable
             'amount' => $amount,
             'currency' => $this->preferredCurrency(),
             'description' => $description,
-            'has_invoice' => true,
         ], $options);
 
         return PaystackInvoice::create($options);
@@ -287,6 +286,17 @@ trait Billable
             }
         }
         return new Collection($paymentMethods);
+    }
+    /**
+     * Deletes the entity's payment methods.
+     *
+     * @return void
+     */
+    public function deletePaymentMethods()
+    {
+        $this->paymentMethods()->each(function ($paymentMethod) {
+            $paymentMethod->delete();
+        });
     }
     /**
      * Determine if the model is actively subscribed to one of the given plans.
