@@ -6,7 +6,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Routing\Controller;
 use Wisdomanthoni\Cashier\Cashier;
 use Wisdomanthoni\Cashier\Subscription;
-use Unicodeveloper\Paystack\Facades\Paystack;
 use Symfony\Component\HttpFoundation\Response;
 use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
 
@@ -16,7 +15,7 @@ class WebhookController extends Controller
     /**
      * Create a new webhook controller instance.
      *
-     * @return void
+     * @return voCode
      */
     public function __construct()
     {
@@ -36,6 +35,40 @@ class WebhookController extends Controller
             return $this->{$method}($payload);
         }
         return $this->missingMethod();
+    }
+    /**
+     * Handle a subscription cancellation notification from paystack.
+     *
+     * @param  array $payload
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function handleSubscriptionCanceled($payload)
+    {
+        return $this->cancelSubscription($payload->data->Code);
+    }
+    /**
+     * Handle a subscription cancellation notification from paystack.
+     *
+     * @param  string  $subscriptionCode
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function cancelSubscription($subscriptionCode)
+    {
+        $subscription = $this->getSubscriptionByCode($subscriptionCode);
+        if ($subscription && (! $subscription->cancelled() || $subscription->onGracePeriod())) {
+            $subscription->markAsCancelled();
+        }
+        return new Response('Webhook Handled', 200);
+    }
+    /**
+     * Get the model for the given subscription Code.
+     *
+     * @param  string  $subscriptionCode
+     * @return \Wisdomanthoni\Cashier\Subscription|null
+     */
+    protected function getSubscriptionByCode($subscriptionCode): ?Subscription
+    {
+        return Subscription::where('paystack_code', $subscriptionCode)->first();
     }
     /**
      * Handle customer subscription create.
@@ -69,7 +102,7 @@ class WebhookController extends Controller
         return new Response('Webhook Handled', 200);
     }
     /**
-     * Get the billable entity instance by Paystack ID.
+     * Get the billable entity instance by Paystack Code.
      *
      * @param  string  $paystackCode
      * @return \Wisdomanthoni\Cashier\Billable

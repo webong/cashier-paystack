@@ -349,7 +349,8 @@ trait Billable
         if (! $response->status) {
             throw new Exception('Unable to create Paystack customer: '.$response->message);
         }
-        $this->paystack_id = $response->data->id;        
+        $this->paystack_id = $response->data->id;  
+        $this->paystack_code = $response->data->customer_code;              
         $this->save();
 
         return $response->data;   

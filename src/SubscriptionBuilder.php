@@ -123,6 +123,7 @@ class SubscriptionBuilder
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
             'paystack_id'   => $response->data->id,
+            'paystack_code' => $response->data->subscription_code,
             'paystack_plan' => $this->plan,
             'quantity' => 1,
             'trial_ends_at' => $trialEndsAt,
