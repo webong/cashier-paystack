@@ -42,9 +42,14 @@ trait Billable
      * @return $response
      * @throws \InvalidArgumentException
      */
-    public function refund($charge, array $options = [])
+    public function refund($transaction, array $options = [])
     {
-        $options['charge'] = $charge;
+        $options = array_merge([
+            'currency' => $this->preferredCurrency(),
+        ], $options);
+
+        $options['transaction'] = $transaction;
+
         $response = PaystackService::refund($options);
         return $response;
     }
