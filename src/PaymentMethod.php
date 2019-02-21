@@ -27,6 +27,14 @@ class PaymentMethod
         $this->paymentMethod = $paymentMethod;
     }
     /**
+     * Check if payment Method is reusable.
+     *
+     */
+    public function isReusable()
+    {
+        return PaystackService::deactivateAuthorization($this->paymentMethod->authorization_code);
+    }
+    /**
      * Check the payment Method have funds for the payment you seek.
      *
      */
@@ -35,7 +43,10 @@ class PaymentMethod
         $data = [];
         $data['email'] = $this->owner->email;
         $data['amount'] = $amount;
-        return PaystackService::checkAuthorization($this->paymentMethod->authorization_code, $data);
+        if ($this->isReusable) {
+            return PaystackService::checkAuthorization($this->paymentMethod->authorization_code, $data);
+        }
+        throw new Exception('Payment Method is no longer reusable.');
     }
     /**
      * Delete the payment Method.

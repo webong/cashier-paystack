@@ -263,7 +263,6 @@ trait Billable
      *
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
      */
     public function invoicesOnlyPaid(array $parameters = []): Collection
     {
