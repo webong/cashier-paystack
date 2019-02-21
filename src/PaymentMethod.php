@@ -26,7 +26,33 @@ class PaymentMethod
         $this->owner = $owner;
         $this->paymentMethod = $paymentMethod;
     }
-    
+    /**
+     * Check the payment Method have funds for the payment you seek.
+     *
+     */
+    public function check($amount)
+    {
+        $data = [];
+        $data['email'] = $this->owner->email;
+        $data['amount'] = $amount;
+        return PaystackService::checkAuthorization($this->paymentMethod->authorization_code, $data);
+    }
+    /**
+     * Delete the payment Method.
+     *
+     */
+    public function delete()
+    {
+        return PaystackService::deactivateAuthorization($this->paymentMethod->authorization_code);
+    }
+    /**
+     * Get the Paystack payment authorization object.
+     *
+     */
+    public function asPaystackAuthorization()
+    {
+        return $this->paymentMethod;
+    }    
     /**
      * Dynamically get values from the Paystack paymentMethod.
      *
