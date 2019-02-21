@@ -195,7 +195,6 @@ class Subscription extends Model
     /**
      * Get the subscription as a Paystack subscription object.
      *
-     * @return \Paystack\Subscription
      * @throws \LogicException
      */
     public function asPaystackSubscription()

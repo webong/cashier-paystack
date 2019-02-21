@@ -152,6 +152,14 @@ class Invoice
 
     }
     /**
+     * Statud for this invoice instance.
+     *
+     */
+    public function status()
+    {
+        return $this->invoice->status;
+    }
+    /**
      * Verify this invoice instance.
      *
      */
@@ -173,7 +181,10 @@ class Invoice
      */
     public function finalize()
     {
-        return PaystackService::finalizeInvoice($this->invoice->id);
+        if ($this->status() === 'draft') {
+            return PaystackService::finalizeInvoice($this->invoice->id);
+        }
+        return $this->notify();
     }
     /**
      * Finalize a draft instance for the invoice.
