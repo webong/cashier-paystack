@@ -47,8 +47,9 @@ class PaymentMethod
         $data = [];
         $data['email'] = $this->owner->email;
         $data['amount'] = $amount;
+        $data['authorization_code'] = $authorization_code;
         if ($this->isReusable) {
-            return PaystackService::checkAuthorization($this->paymentMethod->authorization_code, $data);
+            return PaystackService::checkAuthorization($data);
         }
         throw new Exception('Payment Method is no longer reusable.');
     }

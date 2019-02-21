@@ -110,6 +110,17 @@ class PaystackService {
         return self::setHttpResponse('/charge_authorization', 'POST', $data)->getResponse();
     }
 
+    public static function checkAuthorization($data)
+    {
+        return self::setHttpResponse('/check_authorization', 'POST', $data)->getResponse();
+    }
+
+    public static function deactivateAuthorization($auth_code)
+    {
+        $data = ['authorization_code' => $auth_code];
+        return self::setHttpResponse('/deactivate_authorization', 'POST', $data)->getResponse();
+    }
+
     public static function refund($data)
     {
         return self::setHttpResponse('/refund', 'POST', $data)->getResponse();
