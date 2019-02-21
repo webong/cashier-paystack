@@ -162,9 +162,9 @@ class PaystackService {
         return self::setHttpResponse('/paymentrequest'. $invoice_id, 'PUT', $data)->getResponse();
     }
 
-    public static function verifyInvoice($invoice_id)
+    public static function verifyInvoice($invoice_code)
     {
-        return self::setHttpResponse('/paymentrequest/verify'. $invoice_id, 'GET', [])->getData();
+        return self::setHttpResponse('/paymentrequest/verify'. $invoice_code, 'GET', [])->getData();
     }
 
     public static function notifyInvoice($invoice_id)

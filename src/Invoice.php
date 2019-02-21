@@ -165,7 +165,7 @@ class Invoice
      */
     public function verify()
     {
-        return PaystackService::verifyInvoice($this->invoice->id);
+        return PaystackService::verifyInvoice($this->invoice->request_code);
     }
     /**
      * Notify the customer for this invoice instance.
