@@ -1,7 +1,7 @@
 <?php
 namespace Wisdomanthoni\Cashier;
 
-class Card
+class PaymentMethod
 {
     /**
      * The Paystack model instance.
@@ -10,31 +10,31 @@ class Card
      */
     protected $owner;
     /**
-     * The Paystack card instance.
+     * The Paystack paymentMethod instance.
      *
      */
-    protected $card;
+    protected $paymentMethod;
     /**
-     * Create a new card instance.
+     * Create a new paymentMethod instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $owner
-     * @param   $card
+     * @param   $paymentMethod
      * @return void
      */
-    public function __construct($owner, StripeCard $card)
+    public function __construct($owner, $paymentMethod)
     {
         $this->owner = $owner;
-        $this->card = $card;
+        $this->paymentMethod = $paymentMethod;
     }
     
     /**
-     * Dynamically get values from the Paystack card.
+     * Dynamically get values from the Paystack paymentMethod.
      *
      * @param  string  $key
      * @return mixed
      */
     public function __get($key)
     {
-        return $this->card->{$key};
+        return $this->paymentMethod->{$key};
     }
 }

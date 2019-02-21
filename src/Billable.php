@@ -274,21 +274,21 @@ trait Billable
         return $this->invoices($parameters);
     }   
     /**
-     * Get a collection of the entity's cards.
+     * Get a collection of the entity's payment methods.
      *
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
      */
-    public function cards($parameters = [])
+    public function paymentMethods($parameters = [])
     {
-        $cards = [];
-        $paystackCards = $this->asPaystackCustomer()->authorizations;
-        if (! is_null($paystackCards)) {
-            foreach ($paystackCards as $card) {
-                $cards[] = new Card($this, $card);
+        $paymentMethods = [];
+        $paystackAuthorizations = $this->asPaystackCustomer()->authorizations;
+        if (! is_null($paystackAuthorizations)) {
+            foreach ($paystackAuthorizations as $paymentMethod) {
+                $paymentMethods[] = new PaymentMethod($this, $paymentMethod);
             }
         }
-        return new Collection($cards);
+        return new Collection($paymentMethods);
     }
     /**
      * Determine if the model is actively subscribed to one of the given plans.
