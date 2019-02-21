@@ -1,6 +1,8 @@
 <?php
 namespace Wisdomanthoni\Cashier;
 
+use Exception;
+
 class PaymentMethod
 {
     /**
@@ -29,14 +31,16 @@ class PaymentMethod
     /**
      * Check if payment Method is reusable.
      *
+     * @return bool
      */
     public function isReusable()
     {
-        return PaystackService::deactivateAuthorization($this->paymentMethod->authorization_code);
+        return $this->paymentMethod->reusable;
     }
     /**
      * Check the payment Method have funds for the payment you seek.
      *
+     * @throws \Exception
      */
     public function check($amount)
     {
