@@ -140,6 +140,50 @@ class Invoice
         return Cashier::formatAmount($amount);
     }
     /**
+     * Update instance for the invoice.
+     *
+     * @param  array  $data
+     */
+    public function update(array $data)
+    {
+        $data['customer'] = $this->owner->paystack_id;
+ 
+        return PaystackService::updateInvoice($this->invoice->id, $data);
+
+    }
+    /**
+     * Verify this invoice instance.
+     *
+     */
+    public function verify()
+    {
+        return PaystackService::verifyInvoice($this->invoice->id);
+    }
+    /**
+     * Notify the customer for this invoice instance.
+     *
+     */
+    public function notify()
+    {
+        return PaystackService::notifyInvoice($this->invoice->id);
+    }
+    /**
+     * Finalize a draft instance for the invoice.
+     *
+     */
+    public function finalize()
+    {
+        return PaystackService::finalizeInvoice($this->invoice->id);
+    }
+    /**
+     * Finalize a draft instance for the invoice.
+     *
+     */
+    public function archive()
+    {
+        return PaystackService::archiveInvoice($this->invoice->id);
+    }
+    /**
      * Get the View instance for the invoice.
      *
      * @param  array  $data

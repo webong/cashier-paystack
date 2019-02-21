@@ -147,14 +147,39 @@ class PaystackService {
         return self::setHttpResponse('/paymentrequest', 'POST', $data)->getResponse();
     }
 
+    public static function fetchInvoices($data)
+    {
+        return self::setHttpResponse('/paymentrequest', 'GET', $data)->getData();
+    }
+    
     public static function findInvoice($invoice_id)
     {
         return self::setHttpResponse('/paymentrequest'. $invoice_id, 'GET', [])->getData();
     }
 
-    public static function fetchInvoices($data)
+    public static function updateInvoice($invoice_id, $data)
     {
-        return self::setHttpResponse('/paymentrequest', 'GET', $data)->getData();
+        return self::setHttpResponse('/paymentrequest'. $invoice_id, 'PUT', $data)->getResponse();
+    }
+
+    public static function verifyInvoice($invoice_id)
+    {
+        return self::setHttpResponse('/paymentrequest/verify'. $invoice_id, 'GET', [])->getData();
+    }
+
+    public static function notifyInvoice($invoice_id)
+    {
+        return self::setHttpResponse('/paymentrequest/notify'. $invoice_id, 'POST', [])->getResponse();
+    }
+
+    public static function finalizeInvoice($invoice_id)
+    {
+        return self::setHttpResponse('/paymentrequest/finalize'. $invoice_id, 'POST', [])->getResponse();
+    }
+
+    public static function archiveInvoice($invoice_id)
+    {
+        return self::setHttpResponse('/paymentrequest/archive'. $invoice_id, 'POST', [])->getResponse();
     }
 
 }

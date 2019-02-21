@@ -83,7 +83,6 @@ trait Billable
         return PaystackInvoice::create($options);
     }
     /**
-     * Invoice the customer for the given amount (alias).
      * Invoice the billable entity outside of regular billing cycle.
      *
      * @param  string  $description
@@ -253,7 +252,6 @@ trait Billable
      *
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
      */
     public function invoicesOnlyPending(array $parameters = []): Collection
     {
@@ -349,12 +347,12 @@ trait Billable
     /**
      * Get the Paystack customer for the model.
      *
-     * @return \Paystack\Customer
-     * @throws \Paystack\Exception\NotFound
+     * @return $customer
      */
     public function asPaystackCustomer()
     {
-        return Paystack::fetchCustomer($this->paystack_id)['data'];
+        $customer = Paystack::fetchCustomer($this->paystack_id)['data'];
+        return $customer;
     }
 
     /**
