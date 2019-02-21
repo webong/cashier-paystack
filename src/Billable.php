@@ -82,7 +82,7 @@ trait Billable
             'description' => $description,
         ], $options);
 
-        return PaystackInvoice::create($options);
+        return PaystackService::createInvoice($options);
     }
     /**
      * Invoice the billable entity outside of regular billing cycle.
