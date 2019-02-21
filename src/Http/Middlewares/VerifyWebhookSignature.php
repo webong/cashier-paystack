@@ -40,12 +40,6 @@ final class VerifyWebhookSignature
      */
     public function handle($request, Closure $next)
     {
-            WebhookSignature::verifyHeader(
-                $request->getContent(),
-                $request->header('Stripe-Signature'),
-                $this->config->get('services.stripe.webhook.secret'),
-                $this->config->get('services.stripe.webhook.tolerance')
-            );
         // only a post with paystack signature header gets our attention
         if (!$request->headers->has('HTTP_X_PAYSTACK_SIGNATURE')) 
             $this->app->abort(403);
