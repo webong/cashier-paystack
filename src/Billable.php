@@ -98,7 +98,7 @@ trait Billable
      *
      * @param  string  $subscription
      * @param  string  $plan
-     * @return \Laravel\Cashier\SubscriptionBuilder
+     * @return \Wisdomanthoni\Cashier\SubscriptionBuilder
      */
     public function newSubscription($subscription = 'default', $plan): SubscriptionBuilder
     {
@@ -155,7 +155,7 @@ trait Billable
      * Get a subscription instance by name.
      *
      * @param  string  $subscription
-     * @return \Laravel\Cashier\Subscription|null
+     * @return \Wisdomanthoni\Cashier\Subscription|null
      */
     public function subscription($subscription = 'default')
     {
@@ -196,7 +196,7 @@ trait Billable
      * Find an invoice or throw a 404 error.
      *
      * @param  string  $id
-     * @return \Laravel\Cashier\Invoice
+     * @return \Wisdomanthoni\Cashier\Invoice
      */
     public function findInvoiceOrFail($id): Invoice
     {
@@ -257,7 +257,6 @@ trait Billable
         $parameters['status'] = 'pending';
         return $this->invoices($parameters);
     }
-
      /**
      * Get an array of the entity's invoices.
      *
