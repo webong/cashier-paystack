@@ -33,7 +33,7 @@ trait Billable
         $options['email'] = $this->email;
 
         if (! array_key_exists('card', $options) || ! array_key_exists('authorization_code', $options) || ! array_key_exists('bank', $options)) {
-            throw new InvalidArgumentException('No payment method provided.');
+            throw new InvalidArgumentException('No payment source provided.');
         }
         
        return PaystackService::charge($options);  
