@@ -9,7 +9,6 @@ use Wisdomanthoni\Cashier\Subscription;
 use Symfony\Component\HttpFoundation\Response;
 use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
 
-
 class WebhookController extends Controller
 {
     /**
@@ -19,7 +18,9 @@ class WebhookController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(VerifyWebhookSignature::class);
+        if (config('paystack.secretKey')) {
+            $this->middleware(VerifyWebhookSignature::class);
+        }
     }
     /**
      * Handle a Paystack webhook call.
@@ -37,14 +38,14 @@ class WebhookController extends Controller
         return $this->missingMethod();
     }
     /**
-     * Handle a subscription cancellation notification from paystack.
+     * Handle a subscription disabled notification from paystack.
      *
      * @param  array $payload
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function handleSubscriptionCanceled($payload)
+    protected function handleSubscriptionDisable($payload)
     {
-        return $this->cancelSubscription($payload->data->Code);
+        return $this->cancelSubscription($payload['data']['subscription_code']);
     }
     /**
      * Handle a subscription cancellation notification from paystack.
@@ -69,37 +70,6 @@ class WebhookController extends Controller
     protected function getSubscriptionByCode($subscriptionCode): ?Subscription
     {
         return Subscription::where('paystack_code', $subscriptionCode)->first();
-    }
-    /**
-     * Handle customer subscription create.
-     *
-     * @param  array $payload
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function handleSubscriptionCreate(array $payload)
-    {
-        $user = $this->getUserByPaystackCode($payload['data']['customer']['customer_code']);
-        if ($user) {
-            $data = $payload['data'];
-            $user->subscriptions->filter(function (Subscription $subscription) use ($data) {
-                return $subscription->paystack_code === $data['subscription_code'];
-            })->each(function (Subscription $subscription) use ($data) {
-                // Quantity...
-                if (isset($data['quantity'])) {
-                    $subscription->quantity = $data['quantity'];
-                }
-                // Plan...
-                if (isset($data['plan']['plan_code'])) {
-                    $subscription->paystack_plan = $data['plan']['plan_code'];
-                }
-                // Trial ending date...
-               
-                // Cancellation date...
-                
-                $subscription->save();
-            });
-        }
-        return new Response('Webhook Handled', 200);
     }
     /**
      * Get the billable entity instance by Paystack Code.
