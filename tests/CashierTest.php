@@ -8,6 +8,7 @@ use Wisdomanthoni\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\ConnectionInterface;
+use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
@@ -251,16 +252,25 @@ class CashierTest extends TestCase
     }
     protected function createTestPlan()
     {
-
+        $request = new Request;
+        $data = [
+            "name" => 'Test Plan',
+            "desc" => 'A Plan to Test Subscription',
+            "amount" => 50000,
+            "interval" => 'monthly',
+            "send_invoices" => true,
+        ];
+        $request->replace($data);
+        return Paystack::createPlan();
     }
     protected function getTestCard()
     {
-        return json_encode([
+        return [
                 'number' => '408 408 408 408 408 1',
-                'exp_month' => 5,
-                'exp_year' => 2020,
+                'expiry_month' => 5,
+                'expiry_year' => 2020,
                 'cvv' => '408',
-            ]);
+            ];
     }
     protected function schema(): Builder
     {
