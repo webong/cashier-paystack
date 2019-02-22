@@ -99,7 +99,7 @@ class Invoice
     public function itemAmount()
     {
         $totalAddOn = 0;
-        foreach ($this->invoice->items as $item) {
+        foreach ($this->invoice->invoiceItems as $item) {
             $totalItemAmount += $item->amount;
         }
         return (float) $totalItemAmount;
@@ -109,7 +109,7 @@ class Invoice
      *
      * @return array
      */
-    public function items()
+    public function invoiceItems()
     {
         $items = [];
         foreach ($this->invoice->line_items as $item) {
