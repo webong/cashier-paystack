@@ -348,14 +348,14 @@ trait Billable
 
         $response = PaystackService::createCustomer($options);
 
-        if (! $response->status) {
-            throw new Exception('Unable to create Paystack customer: '.$response->message);
+        if (! $response['status']) {
+            throw new Exception('Unable to create Paystack customer: '.$response['message']);
         }
-        $this->paystack_id = $response->data->id;  
-        $this->paystack_code = $response->data->customer_code;              
+        $this->paystack_id = $response['data']['id'];  
+        $this->paystack_code = $response['data']['customer_code'];              
         $this->save();
 
-        return $response->data;   
+        return $response['data'];   
     }
 
     /**

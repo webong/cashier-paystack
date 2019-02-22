@@ -1,6 +1,8 @@
 <?php
 namespace Wisdomanthoni\Cashier\Tests;
 
+use Unicodeveloper\Paystack\Facades\Paystack;
+use Unicodeveloper\Paystack\PaystackServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
@@ -12,6 +14,8 @@ abstract class TestCase extends OrchestraTestCase
      */
     protected function getPackageProviders($app)
     {
+        return [PaystackServiceProvider::class];
+
     }
     /**
      * Load package alias
@@ -21,7 +25,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageAliases($app)
     {
         return [
-            'Paystack' => Paystack::class,
+            'laravel-paystack' => Paystack::class,
         ];
     }
 }

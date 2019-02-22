@@ -53,6 +53,7 @@ class PaystackService {
         $this->client = new Client(
             [
                 'base_uri' => $this->baseUrl,
+                'verify' => false,
                 'headers' => [
                     'Authorization' => $authBearer,
                     'Content-Type'  => 'application/json',

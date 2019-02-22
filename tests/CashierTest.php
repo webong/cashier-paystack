@@ -73,7 +73,8 @@ class CashierTest extends TestCase
         $user = User::create([
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
-        ])->createAsPaystackCustomer();
+        ]);
+        $user->createAsPaystackCustomer();
         $this->runTestCharge($user);
         $plan = $this->createTestPlan();
         // Create Subscription
