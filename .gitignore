@@ -10,4 +10,4 @@ composer.lock
 .env
 Homestead.yaml
 Homestead.json
-
+test.php

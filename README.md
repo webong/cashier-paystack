@@ -1,5 +1,6 @@
-# Cashier Paystack
-Cashier provides an expressive, fluent interface to Paystack's subscription billing services.
+
+# Introduction
+Cashier Paystack provides an expressive, fluent interface to Paystack's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
@@ -60,7 +61,10 @@ Before using Cashier, we'll also need to prepare the database. We need to add se
 
 ```php
 Schema::table('users', function ($table) {
-    $table->string('paystack_id')->nullable()->collation('utf8mb4_bin');
+    $table->string('paystack_id')->nullable();
+    $table->string('paystack_code')->nullable();
+    $table->string('card_brand')->nullable();
+    $table->string('card_last_four', 4)->nullable();
     $table->timestamp('trial_ends_at')->nullable();
 });
 ```
@@ -69,8 +73,9 @@ Schema::create('subscriptions', function ($table) {
     $table->increments('id');
     $table->unsignedInteger('user_id');
     $table->string('name');
-    $table->string('paystack_id')->collation('utf8mb4_bin');
-    $table->string('paystack_Paystack');
+    $table->string('paystack_id');
+    $table->string('paystack_code');
+    $table->string('paystack_plan');
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
     $table->timestamp('ends_at')->nullable();
@@ -89,6 +94,14 @@ class User extends Authenticatable
     use Billable;
 }
 ```
+## Currency Configuration
+The default Cashier currency is United States Dollars (USD). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
+```php
+use Wisdomanthoni\Cashier\Cashier;
+
+Cashier::useCurrency('ngn', '₦');
+Cashier::useCurrency('ghs', 'GH₵');
+```
 
 ## Subscriptions
 
@@ -98,7 +111,8 @@ To create a subscription, first retrieve an instance of your billable model, whi
 ```php
 $user = User::find(1);
 $plan_name = // Paystack type e.g default, main, yakata
-$plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+$plan_code = // Paystack plan code  e.g PLN_gx2wn530m0i3w3m
+$auth_token = // Paystack card auth token for customer
 $user->newSubscription('main', $plan_code)->create($auth_token);
 // Accepts an auth token for the customer
 $user->newSubscription('main', $plan_code)->create(); 
@@ -106,13 +120,15 @@ $user->newSubscription('main', $plan_code)->create();
 ```
 The first argument passed to the newSubscription method should be the name of the subscription. If your application only offers a single subscription, you might call this main or primary. The second argument is the specific Paystack Paystack code the user is subscribing to. This value should correspond to the Paystack's code identifier in Paystack.
 
-The create method, which may accept a authorization token, will begin the subscription as well as update your database with the customer ID and other relevant billing information.
+The create method, which accepts a Paystack authorization token, will begin the subscription as well as update your database with the customer/user ID and other relevant billing information.
 
 Additional User Details
 If you would like to specify additional customer details, you may do so by passing them as the second argument to the create method:
 ```php
-$user->newSubscription('main', 'monthly')->create($auth_token, [
-    'data' => 'More Data',
+$user->newSubscription('main', 'PLN_cgumntiwkkda3cw')->create($auth_token, [
+    'data' => 'More Customer Data',
+],[
+    'data' => 'More Subscription Data',
 ]);
 ```
 To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
@@ -197,7 +213,7 @@ If you would like to offer trial periods to your customers while still collectin
 ```php
 $user = User::find(1);
 
-$user->newSubscription('main', 'monthly')
+$user->newSubscription('main', 'PLN_gx2wn530m0i3w3m')
             ->trialDays(10)
             ->create($auth_token);
 ```
@@ -242,18 +258,91 @@ Once you are ready to create an actual subscription for the user, you may use th
 ```php
 $user = User::find(1);
 $plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
+// With Paystack card auth token for customer
 $user->newSubscription('main', $plan_code)->create($auth_token);
+$user->newSubscription('main', $plan_code)->create();
 ```
 
 ## Customers
 
 ### Creating Customers
-Occasionally, you may wish to create a Stripe customer without beginning a subscription. You may accomplish this using the createAsStripeCustomer method:
+Occasionally, you may wish to create a Paystack customer without beginning a subscription. You may accomplish this using the createAsPaystackCustomer method:
 ```php
 $user->createAsPaystackCustomer();
 ```
 Once the customer has been created in Paystack, you may begin a subscription at a later date.
 
+## Payment Methods 
+### Retrieving Authenticated Payment Methods
+The paymentMethods method on the billable model instance returns a collection of  Wisdomanthoni\Cashier\PaymentMethod instances:
+```php
+$cards = $user->paymentMethods();
+```
+### Deleting Payment Methods
+To delete a card, you should first retrieve the customer's authentications with the paymentMethod method. Then, you may call the delete method on the instance you wish to delete:
+```php
+foreach ($user->paymentMethods() as $paymentMethod) {
+    $paymentMethod->delete();
+}
+```
+To delete all payment authentication method for a customer
+```php
+$user->deletePaymentMethods();
+```
+
+## Handling Paystack Webhooks
+Paystack can notify your application of a variety of events via webhooks. To handle Paystack webhooks, define a route that points to Cashier's webhook controller. This controller will handle all incoming webhook requests and dispatch them to the proper controller method:
+```php
+Route::post(
+    'paystack/webhook',
+    '\Wisdomanthoni\Cashier\Http\Controllers\WebhookController@handleWebhook'
+);
+```
+Once you have registered your route, be sure to configure the webhook URL in your Paystack dashboard settings.
+
+By default, this controller will automatically handle cancelling subscriptions that have too many failed charges (as defined by your paystack settings), charge success, transfer success or fail, invoice updates and subscription changes; however, as we'll soon discover, you can extend this controller to handle any webhook event you like.
+
+Make sure you protect incoming requests with Cashier's included webhook signature verification middleware.
+
+### Webhooks & CSRF Protection
+Since Paystack webhooks need to bypass Laravel's CSRF protection, be sure to list the URI as an exception in your VerifyCsrfToken middleware or list the route outside of the web middleware group:
+```php
+protected $except = [
+    'paystack/*',
+];
+```
+
+### Defining Webhook Event Handlers
+If you have additional Paystack webhook events you would like to handle, extend the Webhook controller. Your method names should correspond to Cashier's expected convention, specifically, methods should be prefixed with handle and the "camel case" name of the Paystack webhook event you wish to handle.
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Wisdomanthoni\Cashier\Http\Controllers\WebhookController as CashierController;
+
+class WebhookController extends CashierController
+{
+    /**
+     * Handle invoice payment succeeded.
+     *
+     * @param  array  $payload
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function handleInvoiceUpdate($payload)
+    {
+        // Handle The Event
+    }
+}
+```
+Next, define a route to your Cashier controller within your routes/web.php file:
+```php
+Route::post(
+    'paystack/webhook',
+    '\App\Http\Controllers\WebhookController@handleWebhook'
+);
+```
 
 ## Single Charges
 
@@ -263,10 +352,10 @@ When using Paystack, the charge method accepts the amount you would like to char
 If you would like to make a "one off" charge against a subscribed customer's credit card, you may use the  charge method on a billable model instance.
 
 ```php
-// Paystack Accepts Charges In Kobo...
-$stripeCharge = $user->charge(10000);
+// Paystack Accepts Charges In Kobo for Naira...
+$PaystackCharge = $user->charge(10000);
 ```
-The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Stripe / Braintree charge creation. Consult the Stripe or Braintree documentation regarding the options available to you when creating charges:
+The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Paystack charge creation. Consult the Paystack documentation regarding the options available to you when creating charges:
 ```php
 $user->charge(100, [
     'more_option' => $value,
@@ -275,6 +364,7 @@ $user->charge(100, [
 The charge method will throw an exception if the charge fails. If the charge is successful, the full Paystack response will be returned from the method:
 ```php
 try {
+    // Paystack Accepts Charges In Kobo for Naira...
     $response = $user->charge(10000);
 } catch (Exception $e) {
     //
@@ -283,7 +373,7 @@ try {
 ## Charge With Invoice
 Sometimes you may need to make a one-time charge but also generate an invoice for the charge so that you may offer a PDF receipt to your customer. The invoiceFor method lets you do just that. For example, let's invoice the customer ₦2000.00 for a "One Time Fee":
 ```php
-// Paystack Accepts Charges In Kobo...
+// Paystack Accepts Charges In Kobo for Naira...
 $user->invoiceFor('One Time Fee', 200000);
 ```
 The invoice will be charged immediately against the user's credit card. The invoiceFor method also accepts an array as its third argument. This array contains the billing options for the invoice item. The fourth argument accepted by the method is also an array. This final argument accepts the billing options for the invoice itself:
@@ -296,7 +386,7 @@ $user->invoiceFor('Stickers', 50000, [
 To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
 
 Refunding Charges
-If you need to refund a Stripe charge, you may use the refund method. This method accepts the Stripe charge ID as its only argument:
+If you need to refund a Paystack charge, you may use the refund method. This method accepts the Paystack charge ID as its only argument:
 ```php
 $paystackCharge = $user->charge(100);
 

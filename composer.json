@@ -12,10 +12,10 @@
     "require": {
         "php": "^7.1.3",
         "dompdf/dompdf": "^0.8.0",
-        "guzzlehttp/guzzle": "^6.3",
         "illuminate/database": "~5.7.0|~5.8.0",
         "illuminate/support": "~5.7.0|~5.8.0",
         "nesbot/carbon": "~1.0",
+        "orchestra/testbench": "^3.7",
         "symfony/http-kernel": "~4.0",
         "unicodeveloper/laravel-paystack": "^1.0"
     },

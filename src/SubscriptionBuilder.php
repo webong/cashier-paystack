@@ -3,7 +3,9 @@ namespace Wisdomanthoni\Cashier;
 
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Unicodeveloper\Paystack\Facades\Paystack;
+
 class SubscriptionBuilder
 {
     /**
@@ -77,22 +79,12 @@ class SubscriptionBuilder
         $this->skipTrial = true;
         return $this;
     }
-    /**
-     * The coupon to apply to a new subscription.
-     *
-     * @param  string  $coupon
-     * @return $this
-     */
-    public function withCoupon($coupon)
-    {
-        $this->coupon = $coupon;
-        return $this;
-    }
+    
     /**
      * Add a new Paystack subscription to the model.
      *
      * @param  array  $options
-     * @return \Laravel\Cashier\Subscription
+     * @return \Wisdomanthoni\Cashier\Subscription
      * @throws \Exception
      */
     public function add(array $options = [])
@@ -105,19 +97,22 @@ class SubscriptionBuilder
      * @param  string|null  $token
      * @param  array  $customerOptions
      * @param  array  $subscriptionOptions
-     * @return \Laravel\Cashier\Subscription
+     * @return \Wisdomanthoni\Cashier\Subscription
      * @throws \Exception
      */
-    public function create($token = null, array $options = [])
+    public function create($token = null, array $customerOptions = [], array $subscriptionOptions = [])
     {
-        $customer = $this->getPaystackCustomer($token, $options);
-
-        if ($this->coupon) {
-            // TODO: coupon feature
+        $payload = $this->getSubscriptionPayload(
+            $this->getPaystackCustomer($token, $customerOptions), $subscriptionOptions
+        );
+        // Set the desired authorization you wish to use for this subscription here. 
+        // If this is not supplied, the customer's most recent authorization would be used
+        if (isset($token)) {
+            $payload['authorization'] = $token;
         }
-        $response = PaystackService::createSubscription($this->buildPayload($token, $customer));
+        $subscription = PaystackService::createSubscription($payload);
 
-        if (! $response->status) {
+        if (! $subscription['status']) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
         }
         if ($this->skipTrial) {
@@ -127,27 +122,27 @@ class SubscriptionBuilder
         }
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
-            'paystack_id'   => $response->data->subscription_code,
+            'paystack_id'   => $subscription['data']['id'],
+            'paystack_code' => $subscription['data']['subscription_code'],
             'paystack_plan' => $this->plan,
             'quantity' => 1,
             'trial_ends_at' => $trialEndsAt,
             'ends_at' => null,
         ]);
     }
-    
-    /**
-     * Get the base subscription payload for Paystack.
+     /**
+     * Get the subscription payload data for Paystack.
      *
      * @param  $customer
      * @param  array  $options
      * @return array
      * @throws \Exception
      */
-    protected function buildPayload($token = null, $customer)
+    protected function getSubscriptionPayload($customer, array $options = [])
     {
         $response = Paystack::fetchPlan($this->plan);
 
-        if (! $response->status) {
+        if (! $response['status']) {
             throw new Exception('Cannot create subscription on a non existing plan');
         }
 
@@ -158,32 +153,27 @@ class SubscriptionBuilder
         }
 
         $data = [
-            "customer" => $customer, //Customer email or code
+            "customer" => $customer['customer_code'], //Customer email or code
             "plan" => $this->plan,
-            "start_date" => $startDate,
+            "start_date" => $startDate->format('c'),
         ];
-
-        if (isset($token)) {
-            $data['authorization'] = $token;
-        }
 
         return $data;
     }
-    
     /**
      * Get the Paystack customer instance for the current user and token.
      *
      * @param  string|null  $token
      * @param  array  $options
-     * @return \Paystack\Customer
+     * @return $customer
      */
     protected function getPaystackCustomer($token = null, array $options = [])
     {
         if (! $this->owner->paystack_id) {
-            $customer = $this->owner->createAsPaystackCustomer($token, $options);
+            $customer = $this->owner->createAsPaystackCustomer($options);
         } else {
             $customer = $this->owner->asPaystackCustomer();
         }
-        return $customer->customer_code;
+        return $customer;
     }
 }

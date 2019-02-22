@@ -12,28 +12,31 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 trait Billable
 {
     /**
-     * Make a "one off" charge on the customer for the given amount.
+     * Make a "one off" charge on the customer for the given amount 
+     * Send card details or bank details or authorization code to start a charge.
      *
      * @param  int  $amount
      * @param  array  $options
-     * @throws \Exception
+     * @throws \InvalidArgumentException
      */
     public function charge($amount, array $options = [])
     {
-        if (! $this->hasPaystackId()) {
+        if (! $this->paystack_id) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
-
+        $options = array_merge([
+            'currency' => $this->preferredCurrency(),
+            'reference' => Paystack::genTranxRef(),
+        ], $options);
+        
         $options['amount'] = $amount;
-        $options['reference'] = $paystack->genTranxRef();
+        $options['email'] = $this->email;
 
-        if (! array_key_exists('email', $options) && $this->email) {
-            $options['email'] = $this->email;
+        if (! array_key_exists('card', $options) && ! array_key_exists('authorization_code', $options) && ! array_key_exists('bank', $options)) {
+            throw new InvalidArgumentException('No payment source provided.');
         }
-
-        $response = Paystack::makePaymentRequest($options);
-        $response->url = $response->getResponse()['data']['authorization_url'];
-        return $response->getData(); 
+        
+       return PaystackService::charge($options);  
     }
 
     /**
@@ -41,12 +44,19 @@ trait Billable
      *
      * @param  string  $charge
      * @param  array  $options
+     * @return $response
      * @throws \InvalidArgumentException
      */
-    public function refund($charge, array $options = [])
+    public function refund($transaction, array $options = [])
     {
-        $options['charge'] = $charge;
-        return PaystackService::refund($options);
+        $options = array_merge([
+            'currency' => $this->preferredCurrency(),
+        ], $options);
+
+        $options['transaction'] = $transaction;
+
+        $response = PaystackService::refund($options);
+        return $response;
     }
 
     /**
@@ -59,7 +69,7 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->hasPaystackId()) {
+        if (! $this->paystack_id) {
             throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
         }
 
@@ -73,10 +83,12 @@ trait Billable
             'currency' => $this->preferredCurrency(),
             'description' => $description,
         ], $options);
-        return PaystackInvoice::create($options);
+
+        $options['due_date'] = Carbon::parse($options['due_date'])->format('c');
+
+        return PaystackService::createInvoice($options);
     }
     /**
-     * Invoice the customer for the given amount (alias).
      * Invoice the billable entity outside of regular billing cycle.
      *
      * @param  string  $description
@@ -93,7 +105,7 @@ trait Billable
      *
      * @param  string  $subscription
      * @param  string  $plan
-     * @return \Laravel\Cashier\SubscriptionBuilder
+     * @return \Wisdomanthoni\Cashier\SubscriptionBuilder
      */
     public function newSubscription($subscription = 'default', $plan): SubscriptionBuilder
     {
@@ -144,13 +156,13 @@ trait Billable
             return $subscription->valid();
         }
         return $subscription->valid() &&
-               $subscription->Paystack_plan === $plan;
+               $subscription->paystack_plan === $plan;
     }
     /**
      * Get a subscription instance by name.
      *
      * @param  string  $subscription
-     * @return \Laravel\Cashier\Subscription|null
+     * @return \Wisdomanthoni\Cashier\Subscription|null
      */
     public function subscription($subscription = 'default')
     {
@@ -179,7 +191,7 @@ trait Billable
     {
         try {
             $invoice = PaystackService::findInvoice($id);
-            if ($invoice->customer->customer_code != $this->paystack_id) {
+            if ($invoice->customer->id != $this->paystack_id) {
                 return;
             }
             return new Invoice($this, $invoice);
@@ -191,7 +203,7 @@ trait Billable
      * Find an invoice or throw a 404 error.
      *
      * @param  string  $id
-     * @return \Laravel\Cashier\Invoice
+     * @return \Wisdomanthoni\Cashier\Invoice
      */
     public function findInvoiceOrFail($id): Invoice
     {
@@ -219,16 +231,20 @@ trait Billable
      * @param  bool  $includePending
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
+     * @throws \Exception
      */
     public function invoices($options = []): Collection
     {
+        if (! $this->hasPaystackId()) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
+
         $invoices = [];
-        $parameters = array_merge(['customer' => $this->asPaystackCustomer()->id], $options);
+        $parameters = array_merge(['customer' => $this->paystack_id], $options);
         $paystackInvoices = PaystackService::fetchInvoices($parameters);
-        // Here we will loop through the Stripe invoices and create our own custom Invoice
+        // Here we will loop through the Paystack invoices and create our own custom Invoice
         // instances that have more helper methods and are generally more convenient to
-        // work with than the plain Stripe objects are. Then, we'll return the array.
+        // work with than the plain Paystack objects are. Then, we'll return the array.
         if (! is_null($paystackInvoices && ! empty($paystackInvoices))) {
             foreach ($paystackInvoices as $invoice) {
                 $invoices[] = new Invoice($this, $invoice);
@@ -242,26 +258,51 @@ trait Billable
      *
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
      */
     public function invoicesOnlyPending(array $parameters = []): Collection
     {
         $parameters['status'] = 'pending';
         return $this->invoices($parameters);
     }
-
      /**
      * Get an array of the entity's invoices.
      *
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
-     * @throws \Paystack\Exception\NotFound
      */
     public function invoicesOnlyPaid(array $parameters = []): Collection
     {
         $parameters['paid'] = true;
         return $this->invoices($parameters);
     }   
+    /**
+     * Get a collection of the entity's payment methods.
+     *
+     * @param  array  $parameters
+     * @return \Illuminate\Support\Collection
+     */
+    public function paymentMethods($parameters = [])
+    {
+        $paymentMethods = [];
+        $paystackAuthorizations = $this->asPaystackCustomer()->authorizations;
+        if (! is_null($paystackAuthorizations)) {
+            foreach ($paystackAuthorizations as $paymentMethod) {
+                $paymentMethods[] = new PaymentMethod($this, $paymentMethod);
+            }
+        }
+        return new Collection($paymentMethods);
+    }
+    /**
+     * Deletes the entity's payment methods.
+     *
+     * @return void
+     */
+    public function deletePaymentMethods()
+    {
+        $this->paymentMethods()->each(function ($paymentMethod) {
+            $paymentMethod->delete();
+        });
+    }
     /**
      * Determine if the model is actively subscribed to one of the given plans.
      *
@@ -290,8 +331,8 @@ trait Billable
      */
     public function onPlan($plan)
     {
-        return ! is_null($this->subscriptions->first(function ($value) use ($plan) {
-            return $value->paystack_plan === $plan;
+        return ! is_null($this->subscriptions->first(function ($subscription) use ($plan) {
+            return $subscription->paystack_plan === $plan;
         }));
     }
     /**
@@ -309,25 +350,25 @@ trait Billable
 
         $response = PaystackService::createCustomer($options);
 
-        if (! $response->status) {
-            throw new Exception('Unable to create Paystack customer: '.$response->message);
+        if (! $response['status']) {
+            throw new Exception('Unable to create Paystack customer: '.$response['message']);
         }
-        
-        $this->paystack_id = $response->data->customer_code;
+        $this->paystack_id = $response['data']['id'];  
+        $this->paystack_code = $response['data']['customer_code'];              
         $this->save();
 
-        return $response->data;   
+        return $response['data'];   
     }
 
     /**
      * Get the Paystack customer for the model.
      *
-     * @return \Paystack\Customer
-     * @throws \Paystack\Exception\NotFound
+     * @return $customer
      */
     public function asPaystackCustomer()
     {
-        return Paystack::fetchCustomer($this->paystack_id)['data'];
+        $customer = Paystack::fetchCustomer($this->paystack_id)['data'];
+        return $customer;
     }
 
     /**
@@ -339,17 +380,6 @@ trait Billable
     {
         return ! is_null($this->paystack_id);
     }
-
-    /**
-     * Get the tax percentage to apply to the subscription.
-     *
-     * @return int
-     */
-    public function taxPercentage()
-    {
-        return 0;
-    }
-
 
     /**
      * Get the Paystack supported currency used by the entity.

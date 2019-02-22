@@ -25,13 +25,13 @@ class Invoice
      * Create a new invoice instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $owner
-     * @param  PaystackInvoice  $invoice
+     * @param   $invoice
      * @return void
      */
     public function __construct($owner, $invoice)
     {
         $this->owner = $owner;
-        $this->invoice = $invoice;
+        $this->invoice = (object) $invoice;
     }
     /**
      * Get a Carbon date for the invoice.
@@ -78,63 +78,46 @@ class Invoice
      *
      * @return bool
      */
-    public function hasAddOn()
+    public function hasItems()
     {
-        return count($this->invoice->addOns) > 0;
+        return count($this->invoice->items) > 0;
     }
     /**
      * Get the discount amount.
      *
      * @return string
      */
-    public function addOn()
+    public function item()
     {
-        return $this->formatAmount($this->addOnAmount());
+        return $this->formatAmount($this->itemAmount());
     }
     /**
-     * Get the raw add-on amount.
+     * Get the raw item amount.
      *
      * @return float
      */
-    public function addOnAmount()
+    public function itemAmount()
     {
         $totalAddOn = 0;
-        foreach ($this->invoice->addOns as $addOn) {
-            $totalAddOn += $addOn->amount;
+        foreach ($this->invoice->invoiceItems as $item) {
+            $totalItemAmount += $item->amount;
         }
-        return (float) $totalAddOn;
+        return (float) $totalItemAmount;
     }
     /**
-     * Get the add-on codes applied to the invoice.
+     * Get the items applied to the invoice.
      *
      * @return array
      */
-    public function addOns()
+    public function invoiceItems()
     {
-        $addOns = [];
-        foreach ($this->invoice->line_items as $addOn) {
-            $addOns[] = $addOn;
+        $items = [];
+        foreach ($this->invoice->line_items as $item) {
+            $items[] = $item;
         }
-        return $addOns;
+        return $items;
     }
-    /**
-     * Determine if the invoice has a discount.
-     *
-     * @return bool
-     */
-    public function hasDiscount()
-    {
-        return count($this->invoice->discounts) > 0;
-    }
-    /**
-     * Get the discount amount.
-     *
-     * @return string
-     */
-    public function discount()
-    {
-        return $this->formatAmount($this->discountAmount());
-    }
+   
     /**
      * Get the raw discount amount.
      *
@@ -147,24 +130,6 @@ class Invoice
         return (float) $totalDiscount;
     }
     /**
-     * Get the coupon codes applied to the invoice.
-     *
-     * @return array
-     */
-    public function coupons()
-    {
-        // Coupon Not Available
-    }
-    /**
-     * Get the discount amount for the invoice.
-     *
-     * @return string
-     */
-    public function amountOff()
-    {
-        return $this->discount();
-    }
-    /**
      * Format the given amount into a string based on the user's preferences.
      *
      * @param  int  $amount
@@ -173,6 +138,61 @@ class Invoice
     protected function formatAmount($amount)
     {
         return Cashier::formatAmount($amount);
+    }
+    /**
+     * Update instance for the invoice.
+     *
+     * @param  array  $data
+     */
+    public function update(array $data)
+    {
+        $data['customer'] = $this->owner->paystack_id;
+ 
+        return PaystackService::updateInvoice($this->invoice->id, $data);
+
+    }
+    /**
+     * Statud for this invoice instance.
+     *
+     */
+    public function status()
+    {
+        return $this->invoice->status;
+    }
+    /**
+     * Verify this invoice instance.
+     *
+     */
+    public function verify()
+    {
+        return PaystackService::verifyInvoice($this->invoice->request_code);
+    }
+    /**
+     * Notify the customer for this invoice instance.
+     *
+     */
+    public function notify()
+    {
+        return PaystackService::notifyInvoice($this->invoice->id);
+    }
+    /**
+     * Finalize a draft instance for the invoice.
+     *
+     */
+    public function finalize()
+    {
+        if ($this->status() === 'draft') {
+            return PaystackService::finalizeInvoice($this->invoice->id);
+        }
+        return $this->notify();
+    }
+    /**
+     * Finalize a draft instance for the invoice.
+     *
+     */
+    public function archive()
+    {
+        return PaystackService::archiveInvoice($this->invoice->id);
     }
     /**
      * Get the View instance for the invoice.
