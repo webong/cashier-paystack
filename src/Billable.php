@@ -84,6 +84,8 @@ trait Billable
             'description' => $description,
         ], $options);
 
+        $options['due_date'] = Carbon::parse($options['due_date'])->format('c');
+
         return PaystackService::createInvoice($options);
     }
     /**

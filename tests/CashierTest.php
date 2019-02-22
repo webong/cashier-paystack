@@ -160,11 +160,11 @@ class CashierTest extends TestCase
         $user->newSubscription('main', $plan_code)->create();
         $subscription = $user->subscription('main');
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
-            'event' => 'subscription.create',
+            'event' => 'subscription.disable',
             'data' => 
             array (
               'domain' => 'test',
-              'status' => 'active',
+              'status' => 'complete',
               'subscription_code' => $subscription->paystack_code,
               'amount' => 50000,
               'cron_expression' => '0 0 28 * *',
@@ -220,7 +220,8 @@ class CashierTest extends TestCase
         $user = $this->getTestUser();
         // Create Invoice
         $user->createAsPaystackCustomer();
-        $user->invoiceFor('Paystack Cashier', 1000);
+        $options['due_date'] = 'Next Week';
+        $user->invoiceFor('Paystack Cashier', 1000, $options);
         // Invoice Tests
         $invoice = $user->invoices()[0];
         $this->assertEquals('₦10.00', $invoice->total());

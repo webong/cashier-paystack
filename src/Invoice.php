@@ -31,7 +31,7 @@ class Invoice
     public function __construct($owner, $invoice)
     {
         $this->owner = $owner;
-        $this->invoice = $invoice;
+        $this->invoice = (object) $invoice;
     }
     /**
      * Get a Carbon date for the invoice.
