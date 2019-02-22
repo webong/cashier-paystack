@@ -74,7 +74,7 @@ Schema::create('subscriptions', function ($table) {
     $table->unsignedInteger('user_id');
     $table->string('name');
     $table->string('paystack_id');
-    $table->string('paystack_code')->nullable();
+    $table->string('paystack_code');
     $table->string('paystack_plan');
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
@@ -125,8 +125,10 @@ The create method, which accepts a Paystack authorization token, will begin the 
 Additional User Details
 If you would like to specify additional customer details, you may do so by passing them as the second argument to the create method:
 ```php
-$user->newSubscription('main', 'monthly')->create($auth_token, [
-    'data' => 'More Data',
+$user->newSubscription('main', 'PLN_cgumntiwkkda3cw')->create($auth_token, [
+    'data' => 'More Customer Data',
+],[
+    'data' => 'More Subscription Data',
 ]);
 ```
 To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
@@ -211,7 +213,7 @@ If you would like to offer trial periods to your customers while still collectin
 ```php
 $user = User::find(1);
 
-$user->newSubscription('main', 'monthly')
+$user->newSubscription('main', 'PLN_gx2wn530m0i3w3m')
             ->trialDays(10)
             ->create($auth_token);
 ```
@@ -264,7 +266,7 @@ $user->newSubscription('main', $plan_code)->create();
 ## Customers
 
 ### Creating Customers
-Occasionally, you may wish to create a Stripe customer without beginning a subscription. You may accomplish this using the createAsStripeCustomer method:
+Occasionally, you may wish to create a Paystack customer without beginning a subscription. You may accomplish this using the createAsPaystackCustomer method:
 ```php
 $user->createAsPaystackCustomer();
 ```
@@ -279,10 +281,10 @@ When using Paystack, the charge method accepts the amount you would like to char
 If you would like to make a "one off" charge against a subscribed customer's credit card, you may use the  charge method on a billable model instance.
 
 ```php
-// Paystack Accepts Charges In Kobo...
-$stripeCharge = $user->charge(10000);
+// Paystack Accepts Charges In Kobo for Naira...
+$PaystackCharge = $user->charge(10000);
 ```
-The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Stripe / Braintree charge creation. Consult the Stripe or Braintree documentation regarding the options available to you when creating charges:
+The charge method accepts an array as its second argument, allowing you to pass any options you wish to the underlying Paystack charge creation. Consult the Paystack documentation regarding the options available to you when creating charges:
 ```php
 $user->charge(100, [
     'more_option' => $value,
@@ -291,6 +293,7 @@ $user->charge(100, [
 The charge method will throw an exception if the charge fails. If the charge is successful, the full Paystack response will be returned from the method:
 ```php
 try {
+    // Paystack Accepts Charges In Kobo for Naira...
     $response = $user->charge(10000);
 } catch (Exception $e) {
     //
@@ -299,7 +302,7 @@ try {
 ## Charge With Invoice
 Sometimes you may need to make a one-time charge but also generate an invoice for the charge so that you may offer a PDF receipt to your customer. The invoiceFor method lets you do just that. For example, let's invoice the customer ₦2000.00 for a "One Time Fee":
 ```php
-// Paystack Accepts Charges In Kobo...
+// Paystack Accepts Charges In Kobo for Naira...
 $user->invoiceFor('One Time Fee', 200000);
 ```
 The invoice will be charged immediately against the user's credit card. The invoiceFor method also accepts an array as its third argument. This array contains the billing options for the invoice item. The fourth argument accepted by the method is also an array. This final argument accepts the billing options for the invoice itself:
@@ -312,7 +315,7 @@ $user->invoiceFor('Stickers', 50000, [
 To learn more about the additional fields supported by Paystack, check out paystack's documentation on customer creation or the corresponding Paystack documentation.
 
 Refunding Charges
-If you need to refund a Stripe charge, you may use the refund method. This method accepts the Stripe charge ID as its only argument:
+If you need to refund a Paystack charge, you may use the refund method. This method accepts the Paystack charge ID as its only argument:
 ```php
 $paystackCharge = $user->charge(100);
 
