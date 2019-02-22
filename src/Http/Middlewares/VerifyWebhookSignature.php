@@ -45,9 +45,14 @@ final class VerifyWebhookSignature
             $this->app->abort(403);
 
         // validate event do all at once to avoid timing attack
-        if($request->header('HTTP_X_PAYSTACK_SIGNATURE') !== hash_hmac('sha512', $request->getContent(), $this->config->get('paystack.secretKey')))
+        if($request->header('HTTP_X_PAYSTACK_SIGNATURE') !== $this->sign($request->getContent(), $this->config->get('paystack.secretKey')))
             $this->app->abort(403);
 
         return $next($request);
+    }
+
+    private function sign($payload, $secret)
+    {
+        return hash_hmac('sha256', time().'.'.$payload, $secret);
     }
 }
