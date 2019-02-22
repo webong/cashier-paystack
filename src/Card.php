@@ -3,7 +3,7 @@ namespace Wisdomanthoni\Cashier;
 
 use Exception;
 
-class PaymentMethod
+class Card
 {
     /**
      * The Paystack model instance.
@@ -12,30 +12,21 @@ class PaymentMethod
      */
     protected $owner;
     /**
-     * The Paystack paymentMethod instance.
+     * The Paystack card instance.
      *
      */
-    protected $paymentMethod;
+    protected $card;
     /**
-     * Create a new paymentMethod instance.
+     * Create a new card instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $owner
-     * @param   $paymentMethod
+     * @param   $card
      * @return void
      */
-    public function __construct($owner, $paymentMethod)
+    public function __construct($owner, $card)
     {
         $this->owner = $owner;
-        $this->paymentMethod = $paymentMethod;
-    }
-    /**
-     * Check if payment Method is reusable.
-     *
-     * @return bool
-     */
-    public function isReusable()
-    {
-        return $this->paymentMethod->reusable;
+        $this->card = (object) $card;
     }
     /**
      * Check the payment Method have funds for the payment you seek.
@@ -47,7 +38,7 @@ class PaymentMethod
         $data = [];
         $data['email'] = $this->owner->email;
         $data['amount'] = $amount;
-        $data['authorization_code'] = $this->paymentMethod->authorization_code;
+        $data['authorization_code'] = $this->card->authorization_code;
         if ($this->isReusable) {
             return PaystackService::checkAuthorization($data);
         }
@@ -59,7 +50,7 @@ class PaymentMethod
      */
     public function delete()
     {
-        return PaystackService::deactivateAuthorization($this->paymentMethod->authorization_code);
+        return PaystackService::deactivateAuthorization($this->card->authorization_code);
     }
     /**
      * Get the Paystack payment authorization object.
@@ -67,16 +58,16 @@ class PaymentMethod
      */
     public function asPaystackAuthorization()
     {
-        return $this->paymentMethod;
+        return $this->card;
     }    
     /**
-     * Dynamically get values from the Paystack paymentMethod.
+     * Dynamically get values from the Paystack card.
      *
      * @param  string  $key
      * @return mixed
      */
     public function __get($key)
     {
-        return $this->paymentMethod->{$key};
+        return $this->card->{$key};
     }
 }
