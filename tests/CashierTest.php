@@ -58,9 +58,11 @@ class CashierTest extends TestCase
         $user = User::create([
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
-        ]);
+        ])->createAsPaystackCustomer();
+        $this->runTestCharge($user);
+        $plan = $this->createTestPlan();
         // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')->create($this->getTestToken());
+        $user->newSubscription('main', $plan->plan_code)->create();
         $this->assertEquals(1, count($user->subscriptions));
         $this->assertNotNull($user->subscription('main')->paystack_id);
         $this->assertTrue($user->subscribed('main'));
@@ -118,10 +120,12 @@ class CashierTest extends TestCase
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
+        $this->runTestCharge($user);
+        $plan = $this->createTestPlan();
         // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
+        $user->newSubscription('main', $plan->plan_code)
             ->trialDays(7)
-            ->create($this->getTestToken());
+            ->create();
         $subscription = $user->subscription('main');
         $this->assertTrue($subscription->active());
         $this->assertTrue($subscription->onTrial());
@@ -149,8 +153,10 @@ class CashierTest extends TestCase
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
-        $user->newSubscription('main', 'monthly-10-1')
-            ->create($this->getTestToken());
+        $this->runTestCharge($user);
+        $plan = $this->createTestPlan();
+        // Create Subscription
+        $user->newSubscription('main', $plan->plan_code)->create();
         $subscription = $user->subscription('main');
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
             'event' => 'subscription.create',
@@ -214,6 +220,7 @@ class CashierTest extends TestCase
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
+        $this->runTestCharge($user);
         // Create Invoice
         $user->createAsPaystackCustomer();
         $user->invoiceFor('Paystack Cashier', 1000);
@@ -222,16 +229,22 @@ class CashierTest extends TestCase
         $this->assertEquals('₦10.00', $invoice->total());
         $this->assertEquals('Paystack Cashier', $invoice->description);
     }
-    protected function getTestToken()
+    protected function runTestCharge($user)
     {
-        return Token::create([
-            'card' => [
-                'number' => '4242424242424242',
+        $user->charge(10000,[ 'card' => $this->getTestCard() ]);
+    }
+    protected function createTestPlan()
+    {
+
+    }
+    protected function getTestCard()
+    {
+        return json_encode([
+                'number' => '408 408 408 408 408 1',
                 'exp_month' => 5,
                 'exp_year' => 2020,
-                'cvc' => '123',
-            ],
-        ], ['api_key' => getenv('paystack_SECRET')])->id;
+                'cvv' => '408',
+            ]);
     }
     protected function schema(): Builder
     {

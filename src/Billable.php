@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
+use Wisomanthoni\Cashier\PaystackService;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
