@@ -388,7 +388,7 @@ trait Billable
      */
     public function preferredCurrency()
     {
-        return strtoupper(Cashier::usesCurrency());
+        return Cashier::usesCurrency();
     }
 
 }

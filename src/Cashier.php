@@ -81,7 +81,7 @@ class Cashier
      */
     public static function usesCurrency()
     {
-        return static::$currency;
+        return strtoupper(static::$currency);
     }
     /**
      * Set the currency symbol to be used when formatting currency.
