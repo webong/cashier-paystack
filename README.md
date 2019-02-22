@@ -1,10 +1,6 @@
-# Cashier Paystack
-Cashier provides an expressive, fluent interface to Paystack's subscription billing services.
 
-### Paystack Caveats
-Paystack does not support the increment and decrement methods on subscriptions.
-Paystack does not support upgrading or downgrading the underlying subscriptions plan
-Paystack does not support percentage based discounts.
+# Introduction
+Cashier Paystack provides an expressive, fluent interface to Paystack's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
