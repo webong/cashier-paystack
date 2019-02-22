@@ -329,8 +329,8 @@ trait Billable
      */
     public function onPlan($plan)
     {
-        return ! is_null($this->subscriptions->first(function ($value) use ($plan) {
-            return $value->paystack_plan === $plan;
+        return ! is_null($this->subscriptions->first(function ($subscription) use ($plan) {
+            return $subscription->paystack_plan === $plan;
         }));
     }
     /**

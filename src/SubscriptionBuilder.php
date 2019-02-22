@@ -112,7 +112,7 @@ class SubscriptionBuilder
         }
         $subscription = PaystackService::createSubscription($payload);
 
-        if (! $subscription->status) {
+        if (! $subscription['status']) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
         }
         if ($this->skipTrial) {
@@ -122,8 +122,8 @@ class SubscriptionBuilder
         }
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
-            'paystack_id'   => $response->data->id,
-            'paystack_code' => $response->data->subscription_code,
+            'paystack_id'   => $subscription['data']['id'],
+            'paystack_code' => $subscription['data']['subscription_code'],
             'paystack_plan' => $this->plan,
             'quantity' => 1,
             'trial_ends_at' => $trialEndsAt,
@@ -142,7 +142,7 @@ class SubscriptionBuilder
     {
         $response = Paystack::fetchPlan($this->plan);
 
-        if (! $response->status) {
+        if (! $response['status']) {
             throw new Exception('Cannot create subscription on a non existing plan');
         }
 
@@ -153,9 +153,9 @@ class SubscriptionBuilder
         }
 
         $data = [
-            "customer" => $customer->customer_code, //Customer email or code
+            "customer" => $customer['customer_code'], //Customer email or code
             "plan" => $this->plan,
-            "start_date" => $startDate,
+            "start_date" => $startDate->format('c'),
         ];
 
         return $data;

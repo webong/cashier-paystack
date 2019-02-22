@@ -140,7 +140,7 @@ class PaystackService {
     public static function customerSubscriptions($customer_id)
     {
         $data = ['customer' => $customer_id];
-        return (new self)->setHttpResponse('/customer', 'POST', $data)->getResponse();
+        return (new self)->setHttpResponse('/subscription', 'GET', $data)->getData();
     }
 
     /**
