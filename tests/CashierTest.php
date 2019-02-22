@@ -14,6 +14,21 @@ use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
 
 class CashierTest extends TestCase
 {
+    public function getEnvironmentSetUp($app)
+    {
+        if (file_exists(dirname(__DIR__) . '/.env')) {
+            (new \Dotenv\Dotenv(dirname(__DIR__), '.env'))->load();
+        }
+
+        $config = [  
+            'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
+            'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
+            'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
+            'merchantEmail' => getenv('MERCHANT_EMAIL'),
+            'model' => getenv('PAYSTACK_MODEL'),
+        ];
+        $app['config']->set('paystack', $config);
+    }
     public function setUp()
     {
         parent::setUp();
