@@ -98,9 +98,9 @@ trait Billable
      */
     public function invoiceFor($description, $amount, array $options = [])
     {
-        $options = [
+        $options = array_merge([
             'has_invoice' => true,
-        ];
+        ], $options);
         return $this->tab($description, $amount, $options);
     }
     /**
