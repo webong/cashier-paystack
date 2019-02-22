@@ -71,12 +71,7 @@ class CashierTest extends TestCase
     }
     public function test_subscriptions_can_be_created()
     {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
-        $user->createAsPaystackCustomer();
-        $this->runTestCharge($user);
+        $user = $this->getTestUser();
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
@@ -130,14 +125,10 @@ class CashierTest extends TestCase
     }
     public function test_creating_subscription_with_trial()
     {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
-        $this->runTestCharge($user);
-        $plan = $this->createTestPlan();
+        $user = $this->getTestUser();
+        $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
-        $user->newSubscription('main', $plan->plan_code)
+        $user->newSubscription('main', $plan_code)
             ->trialDays(7)
             ->create();
         $subscription = $user->subscription('main');
@@ -163,14 +154,10 @@ class CashierTest extends TestCase
     }
     public function test_marking_as_cancelled_from_webhook()
     {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
-        $this->runTestCharge($user);
-        $plan = $this->createTestPlan();
+        $user = $this->getTestUser();
+        $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
-        $user->newSubscription('main', $plan->plan_code)->create();
+        $user->newSubscription('main', $plan_code)->create();
         $subscription = $user->subscription('main');
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
             'event' => 'subscription.create',
@@ -230,11 +217,7 @@ class CashierTest extends TestCase
     }
     public function test_creating_one_off_invoices()
     {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
-        $this->runTestCharge($user);
+        $user = $this->getTestUser();
         // Create Invoice
         $user->createAsPaystackCustomer();
         $user->invoiceFor('Paystack Cashier', 1000);
@@ -246,6 +229,16 @@ class CashierTest extends TestCase
     protected function runTestCharge($user)
     {
         $user->charge(10000,[ 'card' => $this->getTestCard() ]);
+    }
+    protected function getTestUser()
+    {
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
+        $user->createAsPaystackCustomer();
+        $this->runTestCharge($user);
+        return $user;
     }
     protected function getTestPlan()
     {
