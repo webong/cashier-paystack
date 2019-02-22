@@ -272,6 +272,77 @@ $user->createAsPaystackCustomer();
 ```
 Once the customer has been created in Paystack, you may begin a subscription at a later date.
 
+## Payment Methods 
+### Retrieving Authenticated Payment Methods
+The paymentMethods method on the billable model instance returns a collection of  Wisdomanthoni\Cashier\PaymentMethod instances:
+```php
+$cards = $user->paymentMethods();
+```
+### Deleting Payment Methods
+To delete a card, you should first retrieve the customer's authentications with the paymentMethod method. Then, you may call the delete method on the instance you wish to delete:
+```php
+foreach ($user->paymentMethods() as $paymentMethod) {
+    $paymentMethod->delete();
+}
+```
+To delete all payment authentication method for a customer
+```php
+$user->deletePaymentMethods();
+```
+
+## Handling Paystack Webhooks
+Paystack can notify your application of a variety of events via webhooks. To handle Paystack webhooks, define a route that points to Cashier's webhook controller. This controller will handle all incoming webhook requests and dispatch them to the proper controller method:
+```php
+Route::post(
+    'paystack/webhook',
+    '\Wisdomanthoni\Cashier\Http\Controllers\WebhookController@handleWebhook'
+);
+```
+Once you have registered your route, be sure to configure the webhook URL in your Paystack dashboard settings.
+
+By default, this controller will automatically handle cancelling subscriptions that have too many failed charges (as defined by your paystack settings), charge success, transfer success or fail, invoice updates and subscription changes; however, as we'll soon discover, you can extend this controller to handle any webhook event you like.
+
+Make sure you protect incoming requests with Cashier's included webhook signature verification middleware.
+
+### Webhooks & CSRF Protection
+Since Paystack webhooks need to bypass Laravel's CSRF protection, be sure to list the URI as an exception in your VerifyCsrfToken middleware or list the route outside of the web middleware group:
+```php
+protected $except = [
+    'paystack/*',
+];
+```
+
+### Defining Webhook Event Handlers
+If you have additional Paystack webhook events you would like to handle, extend the Webhook controller. Your method names should correspond to Cashier's expected convention, specifically, methods should be prefixed with handle and the "camel case" name of the Paystack webhook event you wish to handle.
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Wisdomanthoni\Cashier\Http\Controllers\WebhookController as CashierController;
+
+class WebhookController extends CashierController
+{
+    /**
+     * Handle invoice payment succeeded.
+     *
+     * @param  array  $payload
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function handleInvoiceUpdate($payload)
+    {
+        // Handle The Event
+    }
+}
+```
+Next, define a route to your Cashier controller within your routes/web.php file:
+```php
+Route::post(
+    'paystack/webhook',
+    '\App\Http\Controllers\WebhookController@handleWebhook'
+);
+```
 
 ## Single Charges
 
