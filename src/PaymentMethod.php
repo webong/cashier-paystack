@@ -47,7 +47,7 @@ class PaymentMethod
         $data = [];
         $data['email'] = $this->owner->email;
         $data['amount'] = $amount;
-        $data['authorization_code'] = $authorization_code;
+        $data['authorization_code'] = $this->paymentMethod->authorization_code;
         if ($this->isReusable) {
             return PaystackService::checkAuthorization($data);
         }
