@@ -12,7 +12,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 trait Billable
 {
     /**
-     * Make a "one off" charge on the customer for the given amount.
+     * Make a "one off" charge on the customer for the given amount 
+     * Send card details or bank details or authorization code to start a charge.
      *
      * @param  int  $amount
      * @param  array  $options
@@ -20,21 +21,22 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
+        if (! $this->paystack_id) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'reference' => Paystack::genTranxRef(),
         ], $options);
         
         $options['amount'] = $amount;
+        $options['email'] = $this->email;
 
-        if (! array_key_exists('authorization_code', $options) && $this->paystack_id) {
-            $options['email'] = $this->email;
-        }
-        if (! array_key_exists('authorization_code', $options) && ! array_key_exists('email', $options)) {
-            throw new InvalidArgumentException('No payment authorization code provided.');
+        if (! array_key_exists('card', $options) || ! array_key_exists('authorization_code', $options) || ! array_key_exists('bank', $options)) {
+            throw new InvalidArgumentException('No payment method provided.');
         }
         
-       return PaystackService::chargeAuthorization($options);  
+       return PaystackService::charge($options);  
     }
 
     /**
