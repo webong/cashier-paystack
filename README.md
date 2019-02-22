@@ -274,20 +274,20 @@ Once the customer has been created in Paystack, you may begin a subscription at 
 
 ## Payment Methods 
 ### Retrieving Authenticated Payment Methods
-The paymentMethods method on the billable model instance returns a collection of  Wisdomanthoni\Cashier\PaymentMethod instances:
+The cards method on the billable model instance returns a collection of `Wisdomanthoni\Cashier\Card` instances:
 ```php
-$cards = $user->paymentMethods();
+$cards = $user->cards();
 ```
 ### Deleting Payment Methods
-To delete a card, you should first retrieve the customer's authentications with the paymentMethod method. Then, you may call the delete method on the instance you wish to delete:
+To delete a card, you should first retrieve the customer's authentications with the card method. Then, you may call the delete method on the instance you wish to delete:
 ```php
-foreach ($user->paymentMethods() as $paymentMethod) {
-    $paymentMethod->delete();
+foreach ($user->cards() as $card) {
+    $card->delete();
 }
 ```
-To delete all payment authentication method for a customer
+To delete all card payment authentication for a customer
 ```php
-$user->deletePaymentMethods();
+$user->deleteCards();
 ```
 
 ## Handling Paystack Webhooks

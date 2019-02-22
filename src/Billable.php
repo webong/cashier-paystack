@@ -98,6 +98,9 @@ trait Billable
      */
     public function invoiceFor($description, $amount, array $options = [])
     {
+        $options = array_merge([
+            'has_invoice' => true,
+        ], $options);
         return $this->tab($description, $amount, $options);
     }
     /**
@@ -191,7 +194,7 @@ trait Billable
     {
         try {
             $invoice = PaystackService::findInvoice($id);
-            if ($invoice->customer->id != $this->paystack_id) {
+            if ($invoice['customer']['id'] != $this->paystack_id) {
                 return;
             }
             return new Invoice($this, $invoice);
@@ -281,26 +284,27 @@ trait Billable
      * @param  array  $parameters
      * @return \Illuminate\Support\Collection
      */
-    public function paymentMethods($parameters = [])
+    public function cards($parameters = [])
     {
-        $paymentMethods = [];
+        $cards = [];
         $paystackAuthorizations = $this->asPaystackCustomer()->authorizations;
         if (! is_null($paystackAuthorizations)) {
-            foreach ($paystackAuthorizations as $paymentMethod) {
-                $paymentMethods[] = new PaymentMethod($this, $paymentMethod);
+            foreach ($paystackAuthorizations as $card) {
+                if($card['reusable'])
+                    $cards[] = new Card($this, $card);
             }
         }
-        return new Collection($paymentMethods);
+        return new Collection($cards);
     }
     /**
      * Deletes the entity's payment methods.
      *
      * @return void
      */
-    public function deletePaymentMethods()
+    public function deleteCards()
     {
-        $this->paymentMethods()->each(function ($paymentMethod) {
-            $paymentMethod->delete();
+        $this->cards()->each(function ($card) {
+            $card->delete();
         });
     }
     /**
