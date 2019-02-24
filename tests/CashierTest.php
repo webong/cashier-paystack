@@ -229,7 +229,7 @@ class CashierTest extends TestCase
     }
     protected function runTestCharge($user)
     {
-        $user->charge(10000,[ 'card' => $this->getTestCard() ]);
+       return $user->charge(10000,[ 'card' => $this->getTestCard() ]);
     }
     protected function getTestUser()
     {

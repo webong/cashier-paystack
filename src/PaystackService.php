@@ -106,9 +106,9 @@ class PaystackService {
     //     $request->replace($data);
     // }
 
-    public static function charge($data)
+    public static function chargeAuthorization($data)
     {
-        return (new self)->setHttpResponse('/charge', 'POST', $data)->getResponse();
+        return (new self)->setHttpResponse('/charge_authorization', 'POST', $data)->getResponse();
     }
 
     public static function refund($data)
