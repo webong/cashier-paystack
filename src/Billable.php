@@ -30,6 +30,7 @@ trait Billable
         if (! array_key_exists('source', $options) && $this->stripe_id) {
             $options['email'] = $this->email;
         }
+
         if (! array_key_exists('authorization_code', $options) && ! array_key_exists('email', $options)) {
             throw new InvalidArgumentException('No payment authorization provided.');
         }
