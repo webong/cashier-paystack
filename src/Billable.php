@@ -93,9 +93,6 @@ trait Billable
      */
     public function invoiceFor($description, $amount, array $options = [])
     {
-        $options = array_merge([
-            'has_invoice' => true,
-        ], $options);
         return $this->tab($description, $amount, $options);
     }
     /**
@@ -341,7 +338,7 @@ trait Billable
      * @param  array  $options
      * @throws \Exception
      */
-    public function createAsPaystackCustomer($token = null, array $options = [])
+    public function createAsPaystackCustomer(array $options = [])
     {
         $options = array_key_exists('email', $options)
         ? $options

@@ -219,7 +219,6 @@ class CashierTest extends TestCase
     {
         $user = $this->getTestUser();
         // Create Invoice
-        $user->createAsPaystackCustomer();
         $options['due_date'] = 'Next Week';
         $user->invoiceFor('Paystack Cashier', 1000, $options);
         // Invoice Tests
@@ -234,11 +233,11 @@ class CashierTest extends TestCase
     protected function getTestUser()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'xeta@mailinator.com',
             'name' => 'Wisdom Anthony',
         ]);
         $user->createAsPaystackCustomer();
-        $this->runTestCharge($user);
+        // $this->runTestCharge($user);
         return $user;
     }
     protected function getTestPlan()
