@@ -123,15 +123,14 @@ class SubscriptionBuilder
      * Create a new Paystack subscription.
      *
      * @param  string|null  $token
-     * @param  array  $customerOptions
-     * @param  array  $subscriptionOptions
+     * @param  array  $options
      * @return \Wisdomanthoni\Cashier\Subscription
      * @throws \Exception
      */
-    public function create($token = null, array $customerOptions = [], array $subscriptionOptions = [])
+    public function create($token = null, array $options = [])
     {
         $payload = $this->getSubscriptionPayload(
-            $this->getPaystackCustomer($customerOptions), $subscriptionOptions
+            $this->getPaystackCustomer(), $options
         );
         // Set the desired authorization you wish to use for this subscription here. 
         // If this is not supplied, the customer's most recent authorization would be used
