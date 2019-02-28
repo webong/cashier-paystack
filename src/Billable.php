@@ -31,7 +31,11 @@ trait Billable
         if ( ! array_key_exists('authorization_code', $options) ) {
             return Paystack::makePaymentRequest($options)->getData();	  
         } else {
-            return PaystackService::chargeAuthorization($options);   
+            $response = PaystackService::chargeAuthorization($options);   
+            if (! $response['success']) {
+                throw new Exception('Braintree was unable to perform a charge: '.$response->message);
+            }
+            return $response;
         }
     }
 
