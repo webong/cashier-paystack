@@ -162,7 +162,7 @@ class SubscriptionBuilder
             $startDate =  $this->trialDays ? Carbon::now()->addDays($this->trialDays) : Carbon::now();
         }
 
-        return $data = [
+        return [
             "customer" => $customer['customer_code'], //Customer email or code
             "plan" => $this->plan,
             "start_date" => $startDate->format('c'),
