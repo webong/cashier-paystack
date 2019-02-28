@@ -16,10 +16,10 @@
         </testsuite>
     </testsuites>
     <php>
-        <env name="PAYSTACK_PUBLIC_KEY" value="">
-        <env name="PAYSTACK_SECRET_KEY" value="">
-        <env name="PAYSTACK_PAYMENT_URL" value="">
-        <env name="MERCHANT_EMAIL" value="">
-        <env name="PAYSTACK_MODEL" value="Wisdomanthoni\Cashier\Tests\User">
+        <env name="PAYSTACK_PUBLIC_KEY" value=""/>
+        <env name="PAYSTACK_SECRET_KEY" value=""/>
+        <env name="PAYSTACK_PAYMENT_URL" value=""/>
+        <env name="MERCHANT_EMAIL" value=""/>
+        <env name="PAYSTACK_MODEL" value="Wisdomanthoni\Cashier\Tests\User"/>
     </php>
 </phpunit>
