@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Wisdomanthoni\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use Wisdomanthoni\Cashier\Tests\TestCase;
 use Illuminate\Database\ConnectionInterface;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
@@ -16,21 +15,6 @@ use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
 
 class CashierTest extends TestCase
 {
-    public function getEnvironmentSetUp($app)
-    {
-        if (file_exists(dirname(__DIR__) . '/.env')) {
-            (new \Dotenv\Dotenv(dirname(__DIR__), '.env'))->load();
-        }
-
-        $config = [  
-            'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
-            'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
-            'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
-            'merchantEmail' => getenv('MERCHANT_EMAIL'),
-            'model' => getenv('PAYSTACK_MODEL'),
-        ];
-        $app['config']->set('paystack', $config);
-    }
     public function setUp()
     {
         parent::setUp();
