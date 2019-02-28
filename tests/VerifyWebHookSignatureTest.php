@@ -20,7 +20,7 @@ final class VerifyWebhookSignatureTest extends TestCase
         $app = m::mock(Application::class);
 
         $config = m::mock(Config::class);
-        // $config->shouldReceive('get')->with('paystack.secretKey')->andReturn($secret);
+        $config->shouldReceive('get')->with('paystack.secretKey')->andReturn($secret);
 
         $request = new Request([], [], [], [], [], [], 'Signed Body');
         $request->headers->set('HTTP_X_PAYSTACK_SIGNATURE', 't='.time().',v1='.$this->sign($request->getContent(), $secret));
@@ -68,6 +68,6 @@ final class VerifyWebhookSignatureTest extends TestCase
     }
     private function sign($payload, $secret)
     {
-        return hash_hmac('sha256', time().'.'.$payload, $secret);
+        return hash_hmac('sha256', $payload, $secret);
     }
 }

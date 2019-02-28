@@ -10,6 +10,7 @@ use Illuminate\Database\ConnectionInterface;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Contracts\Config\Repository as Config;
 use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
 
 class CashierTest extends TestCase
@@ -17,6 +18,7 @@ class CashierTest extends TestCase
     public function setUp()
     {
         parent::setUp();
+
         Eloquent::unguard();
         $db = new DB;
         $db->addConnection([
