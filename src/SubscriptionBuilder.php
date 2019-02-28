@@ -156,25 +156,17 @@ class SubscriptionBuilder
      */
     protected function getSubscriptionPayload($customer, array $options = [])
     {
-        $response = Paystack::fetchPlan($this->plan);
-
-        if (! $response['status']) {
-            throw new Exception('Cannot create subscription on a non existing plan');
-        }
-
         if ($this->skipTrial) {
             $startDate = Carbon::now();
         } else {
             $startDate =  $this->trialDays ? Carbon::now()->addDays($this->trialDays) : Carbon::now();
         }
 
-        $data = [
+        return $data = [
             "customer" => $customer['customer_code'], //Customer email or code
             "plan" => $this->plan,
             "start_date" => $startDate->format('c'),
         ];
-
-        return $data;
     }
     /**
      * Get the Paystack customer instance for the current user and token.
