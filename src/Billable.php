@@ -20,22 +20,21 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
+        if (! $this->paystack_id) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
+        }
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'reference' => Paystack::genTranxRef(),
         ], $options);
         
         $options['amount'] = $amount;
- 
-        if (! array_key_exists('source', $options) && $this->stripe_id) {
-            $options['email'] = $this->email;
-        }
-
-        if (! array_key_exists('authorization_code', $options) && ! array_key_exists('email', $options)) {
-            throw new InvalidArgumentException('No payment authorization provided.');
+        $options['email'] = $this->email;
+        if (! array_key_exists('card', $options) && ! array_key_exists('authorization_code', $options) && ! array_key_exists('bank', $options)) {
+            throw new InvalidArgumentException('No payment source provided.');
         }
         
-       return PaystackService::chargeAuthorization($options);  
+       return PaystackService::charge($options);   
     }
 
     /**
