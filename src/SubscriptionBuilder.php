@@ -131,7 +131,7 @@ class SubscriptionBuilder
     public function create($token = null, array $customerOptions = [], array $subscriptionOptions = [])
     {
         $payload = $this->getSubscriptionPayload(
-            $this->getPaystackCustomer($token, $customerOptions), $subscriptionOptions
+            $this->getPaystackCustomer($customerOptions), $subscriptionOptions
         );
         // Set the desired authorization you wish to use for this subscription here. 
         // If this is not supplied, the customer's most recent authorization would be used
@@ -183,7 +183,7 @@ class SubscriptionBuilder
      * @param  array  $options
      * @return $customer
      */
-    protected function getPaystackCustomer($token = null, array $options = [])
+    protected function getPaystackCustomer(array $options = [])
     {
         if (! $this->owner->paystack_id) {
             $customer = $this->owner->createAsPaystackCustomer($options);
