@@ -1,19 +1,29 @@
 <?php
 namespace Wisdomanthoni\Cashier\Tests;
 
-use PHPUnit\Framework\TestCase as BaseTestCase;
-
-abstract class TestCase extends BaseTestCase
+use Unicodeveloper\Paystack\Facades\Paystack;
+use Unicodeveloper\Paystack\PaystackServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
+abstract class TestCase extends OrchestraTestCase
 {
-    protected function setUp()
+     /**
+     * Load package service provider
+     * @param  \Illuminate\Foundation\Application $app
+     * @return array
+     */
+    protected function getPackageProviders($app)
     {
-        // $config = [  
-        //     'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
-        //     'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
-        //     'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
-        //     'merchantEmail' => getenv('MERCHANT_EMAIL'),
-        //     'model' => getenv('PAYSTACK_MODEL'),
-        // ];
-        // $app['config']->set('paystack', $config);
+        return [PaystackServiceProvider::class];
+    }
+    /**
+     * Load package alias
+     * @param  \Illuminate\Foundation\Application $app
+     * @return array
+     */
+    protected function getPackageAliases($app)
+    {
+        return [
+            'laravel-paystack' => Paystack::class,
+        ];
     }
 }

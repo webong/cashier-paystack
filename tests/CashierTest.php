@@ -1,13 +1,14 @@
 <?php
 namespace Wisdomanthoni\Cashier\Tests;
 
+use Mockery as m;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Container\Container;
 use Wisdomanthoni\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\ConnectionInterface;
-use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -15,7 +16,19 @@ use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
 
 class CashierTest extends TestCase
 {
-    public function setUp()
+    protected function getEnvironmentSetUp($app)
+    {
+        // Setup default database to use sqlite :memory:
+        $config = [  
+            'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
+            'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
+            'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
+            'merchantEmail' => getenv('MERCHANT_EMAIL'),
+            'model' => getenv('PAYSTACK_MODEL'),
+        ];
+        $app['config']->set('paystack', $config);
+    }
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -50,7 +63,7 @@ class CashierTest extends TestCase
             $table->timestamps();
         });
     }
-    public function tearDown()
+    protected function tearDown(): void
     {
         $this->schema()->drop('users');
         $this->schema()->drop('subscriptions');

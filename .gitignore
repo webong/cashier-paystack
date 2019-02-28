@@ -1,13 +1,6 @@
-vendor/
-node_modules/
-npm-debug.log
-
+/vendor
+/.env
+.DS_Store
+Thumbs.db
+composer.phar
 composer.lock
-
-# Laravel 5 & Lumen specific
-.env.*.php
-.env.php
-.env
-Homestead.yaml
-Homestead.json
-test.php

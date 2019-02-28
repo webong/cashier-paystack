@@ -14,18 +14,17 @@
         "dompdf/dompdf": "^0.8.0",
         "illuminate/database": "~5.7.0|~5.8.0",
         "illuminate/support": "~5.7.0|~5.8.0",
-        "nesbot/carbon": "~1.0",
+        "nesbot/carbon": "^1.26.3 || ^2.0",
         "symfony/http-kernel": "~4.0",
         "unicodeveloper/laravel-paystack": "^1.0"
     },
     "require-dev": {
-        "ext-json": "*",
         "illuminate/http": "~5.7.0|~5.8.0",
         "illuminate/routing": "~5.7.0|~5.8.0",
         "illuminate/view": "~5.7.0|~5.8.0",
         "mockery/mockery": "~1.0",
-        "orchestra/testbench": "^3.7",
-        "phpunit/phpunit": "~7.0"
+        "orchestra/testbench": "~3.0",
+        "phpunit/phpunit": "^7.5 || ^8.0"
     },
     "autoload": {
         "psr-4": {
