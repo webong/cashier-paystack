@@ -75,7 +75,7 @@ class CashierTest extends TestCase
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
-        $charge = $user->charge(5000);
+        $charge = $user->charge(500000);
         $this->assertTrue($charge['status']);
         $this->assertEquals('Authorization URL created', $charge['message'] );
     }

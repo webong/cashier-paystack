@@ -27,13 +27,12 @@ trait Billable
         
         $options['email'] = $this->email;
         $options['amount'] = intval($amount);
-        dd($options);
         if ( array_key_exists('authorization_code', $options) ) {
             $response = PaystackService::chargeAuthorization($options);    
         } elseif (array_key_exists('card', $options) || array_key_exists('bank', $options)) {
             $response = PaystackService::charge($options);   
         } else {
-            $response = PaystackService::makePaymentRequest($options)->getResponse();	  
+            $response = PaystackService::makePaymentRequest($options);	  
         }
 
         if (! $response['status']) {
