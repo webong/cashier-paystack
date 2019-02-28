@@ -20,9 +20,6 @@ trait Billable
      */
     public function charge($amount, array $options = [])
     {
-        if (! $this->paystack_id) {
-            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
-        }
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'reference' => Paystack::genTranxRef(),
@@ -30,8 +27,12 @@ trait Billable
         
         $options['amount'] = $amount;
         $options['email'] = $this->email;
-        
-        return Paystack::makePaymentRequest($options)->getData();	  
+
+        if ( ! array_key_exists('authorization_code', $options) ) {
+            return Paystack::makePaymentRequest($options)->getData();	  
+        } else {
+            return PaystackService::chargeAuthorization($options);   
+        }
     }
 
     /**
