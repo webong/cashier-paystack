@@ -131,7 +131,6 @@ class Subscription extends Model
             'token' => $subscription['email_token'],
             'code'  => $subscription['subscription_code'],
         ]);
-        
         // If the user was on trial, we will set the grace period to end when the trial
         // would have ended. Otherwise, we'll retrieve the end of the billing period
         // period and make that the end of the grace period for this current user.
@@ -173,14 +172,10 @@ class Subscription extends Model
      */
     public function resume()
     {
-        if (! $this->onGracePeriod()) {
-            throw new LogicException('Unable to resume subscription that is not within grace period.');
-        }
         $subscription = $this->asPaystackSubscription();
-        // To resume the subscription we need to set the plan parameter on the Paystack
-        // subscription object. This will force Paystack to resume this subscription
-        // where we left off. Then, we'll set the proper trial ending timestamp.
-
+        // To resume the subscription we need to enable the Paystack
+        // subscription. Then Paystack will resume this subscription
+        // where we left off.
         PaystackService::enableSubscription([
             'token' => $subscription['email_token'],
             'code'  => $subscription['subscription_code'],

@@ -79,16 +79,13 @@ class CashierTest extends TestCase
         $this->assertTrue($charge['status']);
         $this->assertEquals('Authorization URL created', $charge['message'] );
     }
-    public function test_charging_with_authentication_code()
-    {
-
-    }
     public function test_subscriptions_can_be_created()
     {
         $user = $this->getTestUser();
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
+
         $this->assertEquals(1, count($user->subscriptions));
         $this->assertNotNull($user->subscription('main')->paystack_id);
         $this->assertTrue($user->subscribed('main'));
@@ -102,24 +99,25 @@ class CashierTest extends TestCase
         $this->assertFalse($user->subscription('main')->onGracePeriod());
         $this->assertTrue($user->subscription('main')->recurring());
         $this->assertFalse($user->subscription('main')->ended());
-        // Cancel Subscription
+        
         $subscription = $user->subscription('main');
-        exit;
+
+        // Cancel Subscription
         $subscription->cancel();
         $this->assertFalse($subscription->active());
         $this->assertTrue($subscription->cancelled());
         $this->assertFalse($subscription->onGracePeriod());
         $this->assertFalse($subscription->recurring());
         $this->assertTrue($subscription->ended());
+
         // Modify Ends Date To Past
-        $oldGracePeriod = $subscription->ends_at;
         $subscription->fill(['ends_at' => Carbon::now()->subDays(5)])->save();
-        $this->assertTrue($subscription->active());
-        $this->assertFalse($subscription->cancelled());
-        $this->assertTrue($subscription->onGracePeriod());
-        $this->assertTrue($subscription->recurring());
-        $this->assertFalse($subscription->ended());
-        $subscription->fill(['ends_at' => $oldGracePeriod])->save();
+        $this->assertFalse($subscription->active());
+        $this->assertTrue($subscription->cancelled());
+        $this->assertFalse($subscription->onGracePeriod());
+        $this->assertFalse($subscription->recurring());
+        $this->assertTrue($subscription->ended());
+
         // Resume Subscription
         $subscription->resume();
         $this->assertTrue($subscription->active());
