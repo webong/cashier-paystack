@@ -235,7 +235,7 @@ class CashierTest extends TestCase
         $user->invoiceFor('Paystack Cashier', 1000, $options);
         // Invoice Tests
         $invoice = $user->invoices()[0];
-        $this->assertEquals('₦10.00', $invoice->total());
+        $this->assertEquals('₦1,000.00', $invoice->total());
         $this->assertEquals('Paystack Cashier', $invoice->description);
     }
     protected function runTestCharge($user)
