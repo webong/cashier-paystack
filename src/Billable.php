@@ -16,7 +16,7 @@ trait Billable
      *
      * @param  int  $amount
      * @param  array  $options
-     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function charge($amount, array $options = [])
     {
