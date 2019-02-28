@@ -1,7 +1,6 @@
 <?php
 namespace Wisdomanthoni\Cashier\Tests;
 
-use DateTime;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Wisdomanthoni\Cashier\Billable;
