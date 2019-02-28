@@ -33,7 +33,7 @@ trait Billable
         } else {
             $response = PaystackService::chargeAuthorization($options);   
             if (! $response['success']) {
-                throw new Exception('Braintree was unable to perform a charge: '.$response->message);
+                throw new Exception('Paystack was unable to perform a charge: '.$response->message);
             }
             return $response;
         }
