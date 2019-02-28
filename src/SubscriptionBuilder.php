@@ -179,7 +179,6 @@ class SubscriptionBuilder
     /**
      * Get the Paystack customer instance for the current user and token.
      *
-     * @param  string|null  $token
      * @param  array  $options
      * @return $customer
      */
