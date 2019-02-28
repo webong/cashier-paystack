@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 trait Billable
 {
     /**
-     * Make a "one off" charge on the customer for the given amount 
+     * Make a "one off" charge on the customer for the given amount or plan
      *
      * @param  int  $amount
      * @param  array  $options
@@ -30,11 +30,8 @@ trait Billable
         
         $options['amount'] = $amount;
         $options['email'] = $this->email;
-        if (! array_key_exists('card', $options) && ! array_key_exists('authorization_code', $options) && ! array_key_exists('bank', $options)) {
-            throw new InvalidArgumentException('No payment source provided.');
-        }
         
-       return PaystackService::charge($options);   
+        return Paystack::makePaymentRequest($options)->getData();	  
     }
 
     /**

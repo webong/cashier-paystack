@@ -89,7 +89,35 @@ class SubscriptionBuilder
      */
     public function add(array $options = [])
     {
-        return $this->create(null, $options);
+        if ($this->skipTrial) {
+            $trialEndsAt = null;
+        } else {
+            $trialEndsAt = $this->trialDays ? Carbon::now()->addDays($this->trialDays) : null;
+        }
+
+        return $this->owner->subscriptions()->create([
+            'name' => $this->name,
+            'paystack_id'   => $options['data']['id'],
+            'paystack_code' => $options['data']['subscription_code'],
+            'paystack_plan' => $this->plan,
+            'quantity' => 1,
+            'trial_ends_at' => $trialEndsAt,
+            'ends_at' => null,
+        ]);
+    }
+    /**
+     * Charge for a Paystack subscription.
+     *
+     * @param  array  $options
+     * @return \Wisdomanthoni\Cashier\Subscription
+     * @throws \Exception
+     */
+    public function charge(array $options = [])
+    {
+        $options = array_merge([
+            'plan' => $this->plan
+        ], $options);
+        return $this->owner->charge(100, $options);
     }
     /**
      * Create a new Paystack subscription.
@@ -115,20 +143,8 @@ class SubscriptionBuilder
         if (! $subscription['status']) {
             throw new Exception('Paystack failed to create subscription: '.$response->message);
         }
-        if ($this->skipTrial) {
-            $trialEndsAt = null;
-        } else {
-            $trialEndsAt = $this->trialDays ? Carbon::now()->addDays($this->trialDays) : null;
-        }
-        return $this->owner->subscriptions()->create([
-            'name' => $this->name,
-            'paystack_id'   => $subscription['data']['id'],
-            'paystack_code' => $subscription['data']['subscription_code'],
-            'paystack_plan' => $this->plan,
-            'quantity' => 1,
-            'trial_ends_at' => $trialEndsAt,
-            'ends_at' => null,
-        ]);
+        
+        return $this->add($subscription);
     }
      /**
      * Get the subscription payload data for Paystack.
