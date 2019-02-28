@@ -140,7 +140,7 @@ class SubscriptionBuilder
         $subscription = PaystackService::createSubscription($payload);
 
         if (! $subscription['status']) {
-            throw new Exception('Paystack failed to create subscription: '.$response->message);
+            throw new Exception('Paystack failed to create subscription: '.$subscription['message']);
         }
         
         return $this->add($subscription);
