@@ -29,14 +29,15 @@ trait Billable
         $options['email'] = $this->email;
 
         if ( ! array_key_exists('authorization_code', $options) ) {
-            return Paystack::makePaymentRequest($options)->getData();	  
+            $response = Paystack::getAuthorizationResponse($options);	  
         } else {
-            $response = PaystackService::chargeAuthorization($options);   
-            if (! $response['success']) {
-                throw new Exception('Paystack was unable to perform a charge: '.$response->message);
-            }
-            return $response;
+            $response = PaystackService::chargeAuthorization($options);    
         }
+
+        if (! $response['success']) {
+            throw new Exception('Paystack was unable to perform a charge: '.$response->message);
+        }
+        return $response;
     }
 
     /**
