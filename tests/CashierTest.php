@@ -237,7 +237,7 @@ class CashierTest extends TestCase
             'name' => 'Wisdom Anthony',
         ]);
         $user->createAsPaystackCustomer();
-        // $this->runTestCharge($user);
+        $this->runTestCharge($user);
         return $user;
     }
     protected function getTestPlan()
