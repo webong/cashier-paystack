@@ -30,11 +30,13 @@ trait Billable
 
         if ( array_key_exists('authorization_code', $options) ) {
             $response = PaystackService::chargeAuthorization($options);    
+        } elseif (array_key_exists('card', $options) || array_key_exists('bank', $options)) {
+            $response = PaystackService::charge($options);   
         } else {
             $response = Paystack::getAuthorizationResponse($options);	  
         }
 
-        if (! $response['success']) {
+        if (! $response['status']) {
             throw new Exception('Paystack was unable to perform a charge: '.$response->message);
         }
         return $response;
