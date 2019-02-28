@@ -9,6 +9,7 @@ use Wisdomanthoni\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\ConnectionInterface;
+use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -67,6 +68,20 @@ class CashierTest extends TestCase
     {
         $this->schema()->drop('users');
         $this->schema()->drop('subscriptions');
+    }
+    public function test_charging_on_user()
+    {
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
+        $charge = $user->charge(5000);
+        $this->assertTrue($charge['status']);
+        $this->assertEquals('Authorization URL created', $charge['message'] );
+    }
+    public function test_charging_with_authentication_code()
+    {
+
     }
     public function test_subscriptions_can_be_created()
     {
@@ -232,7 +247,7 @@ class CashierTest extends TestCase
     protected function getTestUser()
     {
         $user = User::create([
-            'email' => 'xeta@mailinator.com',
+            'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $user->createAsPaystackCustomer();

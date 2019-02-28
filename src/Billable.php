@@ -12,9 +12,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 trait Billable
 {
     /**
-     * Make a "one off" charge on the customer for the given amount or plan
+     * Make a "one off" or "recurring" charge on the customer for the given amount or plan respectively
      *
-     * @param  int  $amount
+     * @param  $amount
      * @param  array  $options
      * @throws \Exception
      */
@@ -25,15 +25,15 @@ trait Billable
             'reference' => Paystack::genTranxRef(),
         ], $options);
         
-        $options['amount'] = $amount;
         $options['email'] = $this->email;
-
+        $options['amount'] = intval($amount);
+        dd($options);
         if ( array_key_exists('authorization_code', $options) ) {
             $response = PaystackService::chargeAuthorization($options);    
         } elseif (array_key_exists('card', $options) || array_key_exists('bank', $options)) {
             $response = PaystackService::charge($options);   
         } else {
-            $response = Paystack::getAuthorizationResponse($options);	  
+            $response = PaystackService::makePaymentRequest($options)->getResponse();	  
         }
 
         if (! $response['status']) {
