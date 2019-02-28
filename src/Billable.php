@@ -28,10 +28,10 @@ trait Billable
         $options['amount'] = $amount;
         $options['email'] = $this->email;
 
-        if ( ! array_key_exists('authorization_code', $options) ) {
-            $response = Paystack::getAuthorizationResponse($options);	  
-        } else {
+        if ( array_key_exists('authorization_code', $options) ) {
             $response = PaystackService::chargeAuthorization($options);    
+        } else {
+            $response = Paystack::getAuthorizationResponse($options);	  
         }
 
         if (! $response['success']) {
