@@ -63,6 +63,8 @@ class CashierTest extends TestCase
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
         });
+
+        $this->getTestUser();
     }
     protected function tearDown(): void
     {
@@ -71,17 +73,14 @@ class CashierTest extends TestCase
     }
     public function test_charging_on_user()
     {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
+        $user = User::first();
         $charge = $user->charge(500000);
         $this->assertTrue($charge['status']);
         $this->assertEquals('Authorization URL created', $charge['message'] );
     }
     public function test_subscriptions_can_be_created()
     {
-        $user = $this->getTestUser();
+        $user = User::first();
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
@@ -126,6 +125,10 @@ class CashierTest extends TestCase
         $this->assertTrue($subscription->recurring());
         $this->assertFalse($subscription->ended());
     }
+    public function test_creating_subscription_from_webhook()
+    {
+
+    }
     public function test_generic_trials()
     {
         $user = new User;
@@ -137,7 +140,7 @@ class CashierTest extends TestCase
     }
     public function test_creating_subscription_with_trial()
     {
-        $user = $this->getTestUser();
+        $user = User::first();
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)
@@ -166,7 +169,7 @@ class CashierTest extends TestCase
     }
     public function test_marking_as_cancelled_from_webhook()
     {
-        $user = $this->getTestUser();
+        $user = User::first();
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
@@ -229,10 +232,10 @@ class CashierTest extends TestCase
     }
     public function test_creating_one_off_invoices()
     {
-        $user = $this->getTestUser();
+        $user = User::first();
         // Create Invoice
         $options['due_date'] = 'Next Week';
-        $user->invoiceFor('Paystack Cashier', 1000, $options);
+        $user->invoiceFor('Paystack Cashier', 100000, $options);
         // Invoice Tests
         $invoice = $user->invoices()[0];
         $this->assertEquals('₦1,000.00', $invoice->total());
@@ -250,7 +253,6 @@ class CashierTest extends TestCase
         ]);
         $user->createAsPaystackCustomer();
         $this->runTestCharge($user);
-        return $user;
     }
     protected function getTestPlan()
     {
