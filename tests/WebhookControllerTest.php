@@ -31,7 +31,7 @@ class WebhookControllerTestStub extends WebhookController
     {
         // Prevent setting middleware...
     }
-    public function handleSubscriptionCreate()
+    public function handleSubscriptionCreate($payload)
     {
         $_SERVER['__received'] = true;
     }
