@@ -79,8 +79,8 @@ Schema::create('subscriptions', function ($table) {
     $table->increments('id');
     $table->unsignedInteger('user_id');
     $table->string('name');
-    $table->string('paystack_id')->nullable();;
-    $table->string('paystack_code')->nullable();;
+    $table->string('paystack_id')->nullable();
+    $table->string('paystack_code')->nullable();
     $table->string('paystack_plan');
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
