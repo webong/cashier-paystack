@@ -17,7 +17,7 @@
     </testsuites>
     <php>
         <env name="PAYSTACK_PUBLIC_KEY" value=""/>
-        <env name="PAYSTACK_SECRET_KEY" value="sk_test_2ed0d15eda33366b1b59b9c9cad6baea1731a399"/>
+        <env name="PAYSTACK_SECRET_KEY" value=""/>
         <env name="PAYSTACK_PAYMENT_URL" value="https://api.paystack.co"/>
         <env name="MERCHANT_EMAIL" value=""/>
         <env name="PAYSTACK_MODEL" value="Wisdomanthoni\Cashier\Tests\User"/>
