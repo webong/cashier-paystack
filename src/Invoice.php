@@ -69,9 +69,28 @@ class Invoice
      */
     public function subtotal()
     {
-        return $this->formatAmount(
-            max(0, $this->invoice['amount'] - $this->invoice['discount']['amount'])
-        );
+        if ($this->hasStartingBalance()) {
+            return $this->startingBalance();
+        }
+        return $this->total();
+    }
+    /**
+     * Determine if the account had a starting balance.
+     *
+     * @return bool
+     */
+    public function hasStartingBalance()
+    {
+        return $this->rawStartingBalance() > 0;
+    }
+    /**
+     * Get the starting balance for the invoice.
+     *
+     * @return string
+     */
+    public function startingBalance()
+    {
+        return $this->formatAmount($this->rawStartingBalance());
     }
     /**
      * Determine if the invoice has a discount.
@@ -125,17 +144,17 @@ class Invoice
         return $this->formatAmount(0);
     }
     /**
-     * Get the raw invoice amount.
+     * Get the raw invoice balance amount.
      *
      * @return float
      */
-    public function invoiceAmount()
+    public function rawStartingBalance()
     {
-        $totalAddOn = 0;
+        $totalItemAmount = 0;
         foreach ($this->invoice['line_items'] as $item) {
-            $totalItemAmount += $item->amount;
+            $totalItemAmount += $item['amount'];
         }
-        return $this->formatAmount($totalItemAmount);
+        return $totalItemAmount;
     }
     /**
      * Get the items applied to the invoice.

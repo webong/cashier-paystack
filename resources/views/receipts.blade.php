@@ -125,7 +125,7 @@
                             @elseif (isset($invoice->description))
                                 {{ $invoice->description }}
                             @else
-                                Charge
+                                Invoice {{ $invoice->id }}
                             @endif
                         </td>
 
