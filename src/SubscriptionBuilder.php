@@ -143,7 +143,7 @@ class SubscriptionBuilder
             throw new Exception('Paystack failed to create subscription: '.$subscription['message']);
         }
         
-        return $this->add($subscription);
+        return $this->add($subscription['data']);
     }
      /**
      * Get the subscription payload data for Paystack.
