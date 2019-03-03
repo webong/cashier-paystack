@@ -322,7 +322,7 @@ class CashierTest extends TestCase
         $data = [
             "name" => 'Test Plan',
             "desc" => 'A Plan to Test Subscription',
-            "amount" => 50000,
+            "amount" => rand(50000, 100000),
             "interval" => 'monthly',
             "send_invoices" => true,
         ];
