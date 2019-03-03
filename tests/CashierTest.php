@@ -8,6 +8,7 @@ use Illuminate\Container\Container;
 use Wisdomanthoni\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
+use Wisdomanthoni\Cashier\PaystackService;
 use Illuminate\Database\ConnectionInterface;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Illuminate\Database\Capsule\Manager as DB;
