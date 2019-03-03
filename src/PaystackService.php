@@ -210,4 +210,8 @@ class PaystackService {
         return (new self)->setHttpResponse('/paymentrequest/archive'. $invoice_id, 'POST', [])->getResponse();
     }
 
+    public static function createPlan($data)
+    {
+        return (new self)->setHttpResponse('/plan', 'POST', $data)->getData();
+    }
 }

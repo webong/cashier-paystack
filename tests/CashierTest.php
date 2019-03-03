@@ -339,10 +339,7 @@ class CashierTest extends TestCase
             "interval" => 'monthly',
             "send_invoices" => false,
         ];
-        request()->merge($data);
-        Paystack::createPlan();
-        $plans  = Paystack::fetchPlan('');
-        return collect($plans['data'])->last();
+        return PaystackService::createPlan($data);
     }
     protected function getTestCard()
     {
