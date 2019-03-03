@@ -97,8 +97,8 @@ class SubscriptionBuilder
 
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
-            'paystack_id'   => $options['data']['id'],
-            'paystack_code' => $options['data']['subscription_code'],
+            'paystack_id'   => $options['id'],
+            'paystack_code' => $options['subscription_code'],
             'paystack_plan' => $this->plan,
             'quantity' => 1,
             'trial_ends_at' => $trialEndsAt,

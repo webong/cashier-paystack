@@ -38,6 +38,23 @@ class WebhookController extends Controller
         return $this->missingMethod();
     }
     /**
+     * Handle customer subscription create.
+     *
+     * @param  array $payload
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function handleSubscriptionCreate(array $payload)
+    {
+        $data = $payload['data'];
+        $user = $this->getUserByPaystackCode($data['customer']['customer_code']);
+        if ($user) {
+            $plan = $data['plan'];
+            $subscription = $user->newSubscription($plan['name'], $plan['plan_code']);
+            $subscription->add($data);
+        }
+        return new Response('Webhook Handled', 200);
+    }
+    /**
      * Handle a subscription disabled notification from paystack.
      *
      * @param  array $payload
