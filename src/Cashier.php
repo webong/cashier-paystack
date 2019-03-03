@@ -123,7 +123,7 @@ class Cashier
         if (static::$formatCurrencyUsing) {
             return call_user_func(static::$formatCurrencyUsing, $amount);
         }
-        $amount = number_format($amount , 2);
+        $amount = number_format($amount / 100 , 2);
         if (starts_with($amount, '-')) {
             return '-'.static::usesCurrencySymbol().ltrim($amount, '-');
         }

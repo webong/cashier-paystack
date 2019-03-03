@@ -70,7 +70,7 @@ class Invoice
     public function subtotal()
     {
         return $this->formatAmount(
-            max(0, $this->invoice['amount'] + $this->discountAmount())
+            max(0, $this->invoice['amount'] - $this->invoice['discount']['amount'])
         );
     }
     /**
@@ -80,7 +80,7 @@ class Invoice
      */
     public function hasDiscount()
     {
-        // TODO
+        return isset($this->invoice['discount']);
     }
     /**
      * Get the discount amount.
@@ -89,7 +89,7 @@ class Invoice
      */
     public function discount()
     {
-        return $this->formatAmount($this->invoice['discount']);
+        return $this->formatAmount($this->invoice['discount']['amount']);
     }
     /**
      * Determine if the discount is a percentage.
@@ -98,7 +98,7 @@ class Invoice
      */
     public function discountIsPercentage()
     {
-        return isset($this->invoice['discount']['percent_off']);
+        return $this->hasDiscount() && $this->invoice['discount']['type'] == 'percentage' ;
     }
     /**
      * Get the discount percentage for the invoice.
@@ -107,8 +107,8 @@ class Invoice
      */
     public function percentOff()
     {
-        if ($this->coupon()) {
-            return $this->invoice['discount']['percent_off'];
+        if ($this->discountIsPercentage()) {
+            return $this->invoice['discount']['amount'];
         }
         return 0;
     }
