@@ -50,6 +50,7 @@ class WebhookController extends Controller
         if ($user) {
             $plan = $data['plan'];
             $subscription = $user->newSubscription($plan['name'], $plan['plan_code']);
+            $data['id'] =  null;
             $subscription->add($data);
         }
         return new Response('Webhook Handled', 200);

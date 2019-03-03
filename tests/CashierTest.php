@@ -55,7 +55,7 @@ class CashierTest extends TestCase
             $table->increments('id');
             $table->integer('user_id');
             $table->string('name');
-            $table->string('paystack_id');
+            $table->string('paystack_id')->nullable();;
             $table->string('paystack_code')->nullable();
             $table->string('paystack_plan');
             $table->integer('quantity');
@@ -127,7 +127,70 @@ class CashierTest extends TestCase
     }
     public function test_creating_subscription_from_webhook()
     {
+        $user = User::first();
+        $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
+            'event' => 'subscription.create',
+            'data' => 
+            array (
+              'domain' => 'test',
+              'status' => 'complete',
+              'subscription_code' => 'SUB_vsyqdmlzble3uii',
+              'amount' => 50000,
+              'cron_expression' => '0 0 28 * *',
+              'next_payment_date' => '2016-05-19T07:00:00.000Z',
+              'open_invoice' => NULL,
+              'createdAt' => '2016-03-20T00:23:24.000Z',
+              'plan' => 
+              array (
+                'name' => 'Monthly retainer',
+                'plan_code' => 'PLN_gx2wn530m0i3w3m',
+                'description' => NULL,
+                'amount' => 50000,
+                'interval' => 'monthly',
+                'send_invoices' => true,
+                'send_sms' => true,
+                'currency' => 'NGN',
+              ),
+              'authorization' => 
+              array (
+                'authorization_code' => 'AUTH_96xphygz',
+                'bin' => '539983',
+                'last4' => '7357',
+                'exp_month' => '10',
+                'exp_year' => '2017',
+                'card_type' => 'MASTERCARD DEBIT',
+                'bank' => 'GTBANK',
+                'country_code' => 'NG',
+                'brand' => 'MASTERCARD',
+              ),
+              'customer' => 
+              array (
+                'first_name' => 'BoJack',
+                'last_name' => 'Horseman',
+                'email' => 'bojack@horsinaround.com',
+                'customer_code' => $user->paystack_code,
+                'phone' => '',
+                array (
+                ),
+                'risk_action' => 'default',
+              ),
+              'created_at' => '2016-10-01T10:59:59.000Z',
+            ),
+          )));
+    
+        $controller = new CashierTestControllerStub;
+        $response = $controller->handleWebhook($request);
+        $this->assertEquals(200, $response->getStatusCode());
+        
+        $user = $user->fresh();
 
+        $subscription = $user->subscription('Monthly retainer');
+ 
+        $this->assertTrue($subscription->active());
+        $this->assertFalse($subscription->cancelled());
+        $this->assertFalse($subscription->onGracePeriod());
+        $this->assertTrue($subscription->recurring());
+        $this->assertFalse($subscription->ended());  
     }
     public function test_generic_trials()
     {
