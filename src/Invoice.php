@@ -72,7 +72,9 @@ class Invoice
         if ($this->hasStartingBalance()) {
             return $this->startingBalance();
         }
-        return $this->total();
+        return $this->formatAmount(
+            max(0, $this->invoice['amount'] - ($this->invoice['discount']['amount'] ?? 0))
+        );    
     }
     /**
      * Determine if the account had a starting balance.
