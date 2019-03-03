@@ -317,6 +317,7 @@ class CashierTest extends TestCase
             'email' => 'wisdomanthoni@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
+        $user->createAsPaystackCustomer();
         // Create Invoice
         $options['due_date'] = 'Next Week';
         $user->invoiceFor('Paystack Cashier', 100000, $options);
