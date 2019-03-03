@@ -337,7 +337,7 @@ class CashierTest extends TestCase
             "desc" => 'A Plan to Test Subscription',
             "amount" => rand(50000, 100000),
             "interval" => 'monthly',
-            "send_invoices" => true,
+            "send_invoices" => false,
         ];
         request()->merge($data);
         Paystack::createPlan();
