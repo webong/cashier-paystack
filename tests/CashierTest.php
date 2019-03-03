@@ -63,8 +63,6 @@ class CashierTest extends TestCase
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
         });
-
-        $this->getTestUser();
     }
     protected function tearDown(): void
     {
@@ -73,14 +71,21 @@ class CashierTest extends TestCase
     }
     public function test_charging_on_user()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
         $charge = $user->charge(500000);
         $this->assertTrue($charge['status']);
         $this->assertEquals('Authorization URL created', $charge['message'] );
     }
     public function test_subscriptions_can_be_created()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
+        $this->runTestCharge($user);
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
@@ -127,7 +132,11 @@ class CashierTest extends TestCase
     }
     public function test_creating_subscription_from_webhook()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
+
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
             'event' => 'subscription.create',
             'data' => 
@@ -203,7 +212,10 @@ class CashierTest extends TestCase
     }
     public function test_creating_subscription_with_trial()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
         $plan_code = $this->getTestPlan()['plan_code'];
         // Create Subscription
         $user->newSubscription('main', $plan_code)
@@ -232,11 +244,17 @@ class CashierTest extends TestCase
     }
     public function test_marking_as_cancelled_from_webhook()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
         $plan_code = $this->getTestPlan()['plan_code'];
+
         // Create Subscription
         $user->newSubscription('main', $plan_code)->create();
+        // Fetch Subscription
         $subscription = $user->subscription('main');
+
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(array (
             'event' => 'subscription.disable',
             'data' => 
@@ -252,7 +270,7 @@ class CashierTest extends TestCase
               'plan' => 
               array (
                 'name' => 'Monthly retainer',
-                'plan_code' => 'PLN_gx2wn530m0i3w3m',
+                'plan_code' => $subscription->paystack_plan,
                 'description' => NULL,
                 'amount' => 50000,
                 'interval' => 'monthly',
@@ -295,7 +313,10 @@ class CashierTest extends TestCase
     }
     public function test_creating_one_off_invoices()
     {
-        $user = User::first();
+        $user = User::create([
+            'email' => 'wisdomanthoni@gmail.com',
+            'name' => 'Wisdom Anthony',
+        ]);
         // Create Invoice
         $options['due_date'] = 'Next Week';
         $user->invoiceFor('Paystack Cashier', 100000, $options);
@@ -308,19 +329,10 @@ class CashierTest extends TestCase
     {
        return $user->charge(10000,[ 'card' => $this->getTestCard() ]);
     }
-    protected function getTestUser()
-    {
-        $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
-            'name' => 'Wisdom Anthony',
-        ]);
-        $user->createAsPaystackCustomer();
-        $this->runTestCharge($user);
-    }
     protected function getTestPlan()
     {
         $data = [
-            "name" => 'Test Plan',
+            "name" => 'Plan '. str_random(4),
             "desc" => 'A Plan to Test Subscription',
             "amount" => rand(50000, 100000),
             "interval" => 'monthly',
