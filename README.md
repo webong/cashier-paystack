@@ -1,4 +1,10 @@
 
+# Laravel Cashier - Paystack Edition
+[![Build Status](https://travis-ci.org/wisdomanthoni/cashier-paystack.svg)](https://travis-ci.org/wisdomanthoni/cashier-paystack)
+[![Latest Stable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/stable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
+[![Total Downloads](https://poser.pugx.org/wisdomanthoni/cashier-paystack/downloads)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
+[![Latest Unstable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/unstable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
+[![License](https://poser.pugx.org/wisdomanthoni/cashier-paystack/license)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 # Introduction
 Cashier Paystack provides an expressive, fluent interface to Paystack's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
@@ -73,8 +79,8 @@ Schema::create('subscriptions', function ($table) {
     $table->increments('id');
     $table->unsignedInteger('user_id');
     $table->string('name');
-    $table->string('paystack_id');
-    $table->string('paystack_code');
+    $table->string('paystack_id')->nullable();;
+    $table->string('paystack_code')->nullable();;
     $table->string('paystack_plan');
     $table->integer('quantity');
     $table->timestamp('trial_ends_at')->nullable();
@@ -110,13 +116,15 @@ To create a subscription, first retrieve an instance of your billable model, whi
 
 ```php
 $user = User::find(1);
-$plan_name = // Paystack type e.g default, main, yakata
+$plan_name = // Paystack plan name e.g default, main, yakata
 $plan_code = // Paystack plan code  e.g PLN_gx2wn530m0i3w3m
 $auth_token = // Paystack card auth token for customer
-$user->newSubscription('main', $plan_code)->create($auth_token);
-// Accepts an auth token for the customer
-$user->newSubscription('main', $plan_code)->create(); 
-// The customer's most recent authorization would be used
+// Accepts an card authorization authtoken for the customer
+$user->newSubscription($plan_name, $plan_code)->create($auth_token);
+// The customer's most recent authorization would be used to charge subscription
+$user->newSubscription($plan_name, $plan_code)->create(); 
+// Initialize a new charge for a subscription
+$user->newSubscription($plan_name, $plan_code)->charge(); 
 ```
 The first argument passed to the newSubscription method should be the name of the subscription. If your application only offers a single subscription, you might call this main or primary. The second argument is the specific Paystack Paystack code the user is subscribing to. This value should correspond to the Paystack's code identifier in Paystack.
 
@@ -136,6 +144,7 @@ To learn more about the additional fields supported by Paystack, check out payst
 ### Checking Subscription Status
 Once a user is subscribed to your application, you may easily check their subscription status using a variety of convenient methods. First, the subscribed method returns true if the user has an active subscription, even if the subscription is currently within its trial period:
 ```php
+// Paystack plan name e.g default, main, yakata
 if ($user->subscribed('main')) {
     //
 }
@@ -162,8 +171,9 @@ if ($user->subscription('main')->onTrial()) {
 
 The subscribedToPaystack method may be used to determine if the user is subscribed to a given Paystack based on a given Paystack Paystack code. In this example, we will determine if the user's main subscription is actively subscribed to the monthly Paystack:
 ```php
+$plan_name = // Paystack plan name e.g default, main, yakata
 $plan_code = // Paystack Paystack Code  e.g PLN_gx2wn530m0i3w3m
-if ($user->subscribedToPaystack($plan_code, 'main')) {
+if ($user->subscribedToPlan($plan_code, $plan_code)) {
     //
 }
 ```

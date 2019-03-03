@@ -10,7 +10,7 @@ use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
 
 final class VerifyWebhookSignatureTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
@@ -18,14 +18,19 @@ final class VerifyWebhookSignatureTest extends TestCase
     {
         $secret = 'secret';
         $app = m::mock(Application::class);
+
         $config = m::mock(Config::class);
         $config->shouldReceive('get')->with('paystack.secretKey')->andReturn($secret);
+
         $request = new Request([], [], [], [], [], [], 'Signed Body');
-        $request->headers->set('Paystack-Signature', 't='.time().',v1='.$this->sign($request->getContent(), $secret));
+        $request->headers->set('HTTP_X_PAYSTACK_SIGNATURE', 't='.time().',v1='.$this->sign($request->getContent(), $secret));
+
         $called = false;
+
         (new VerifyWebhookSignature($app, $config))->handle($request, function ($request) use (&$called) {
             $called = true;
         });
+
         static::assertTrue($called);
     }
     public function test_bad_signature_aborts()
@@ -33,10 +38,13 @@ final class VerifyWebhookSignatureTest extends TestCase
         $secret = 'secret';
         $app = m::mock(Application::class);
         $app->shouldReceive('abort')->andThrow(HttpException::class, 403);
+
         $config = m::mock(Config::class);
         $config->shouldReceive('get')->with('paystack.secretKey')->andReturn($secret);
+
         $request = new Request([], [], [], [], [], [], 'Signed Body');
         $request->headers->set('Paystack-Signature', 't='.time().',v1=fail');
+
         static::expectException(HttpException::class);
         (new VerifyWebhookSignature($app, $config))->handle($request, function ($request) {
         });
@@ -46,16 +54,20 @@ final class VerifyWebhookSignatureTest extends TestCase
         $secret = 'secret';
         $app = m::mock(Application::class);
         $app->shouldReceive('abort')->andThrow(HttpException::class, 403);
+
         $config = m::mock(Config::class);
         $config->shouldReceive('get')->with('paystack.secretKey')->andReturn($secret);
+
         $request = new Request([], [], [], [], [], [], 'Signed Body');
         $request->headers->set('Paystack-Signature', 't='.time().',v1='.$this->sign($request->getContent(), ''));
+
         static::expectException(HttpException::class);
+
         (new VerifyWebhookSignature($app, $config))->handle($request, function ($request) {
         });
     }
     private function sign($payload, $secret)
     {
-        return hash_hmac('sha256', time().'.'.$payload, $secret);
+        return hash_hmac('sha256', $payload, $secret);
     }
 }

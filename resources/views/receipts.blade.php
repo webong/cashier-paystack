@@ -122,31 +122,46 @@
                         <td>
                             @if ($invoice->planId)
                                 Subscription To "{{ $invoice->planId }}"
-                            @elseif (isset($invoice->customFields['description']))
-                                {{ $invoice->customFields['description'] }}
+                            @elseif (isset($invoice->description))
+                                {{ $invoice->description }}
                             @else
-                                Charge
+                                Invoice {{ $invoice->id }}
                             @endif
                         </td>
 
                         <td>{{ $invoice->subtotal() }}</td>
                     </tr>
 
-                    <!-- Display The Add-Ons -->
-                    @if ($invoice->hasAddOn())
+                    <!-- Display The Invoice Items -->
+                    @foreach ($invoice->invoiceItems() as $item)
                         <tr>
-                            <td>Add-Ons ({{ implode(', ', $invoice->addOns()) }})</td>
-                            <td>{{ $invoice->addOn() }}</td>
+                            <td colspan="2">{{ $item->name }}</td>
+                            <td>{{ Laravel\Cashier\Cashier::formatAmount($item->amount) }}</td>
                         </tr>
-                    @endif
+                    @endforeach
+
 
                     <!-- Display The Discount -->
                     @if ($invoice->hasDiscount())
                         <tr>
-                            <td>Discounts ({{ implode(', ', $invoice->coupons()) }})</td>
+                            @if ($invoice->discountIsPercentage())
+                                <td>{{ $invoice->percentOff() }}% Off</td>
+                            @else
+                                <td>{{ $invoice->amountOff() }} Off</td>
+                            @endif
+                            <td>&nbsp;</td>
                             <td>-{{ $invoice->discount() }}</td>
                         </tr>
                     @endif
+
+                    <!-- Display The Tax Amount -->
+                    @foreach ($invoice->tax as $tax)
+                        <tr>
+                            <td colspan="2">{{ $item->name }}</td>
+                            <td>{{ Laravel\Cashier\Cashier::formatAmount($item->amount) }}</td>
+                        </tr>
+                    @endforeach
+
 
                     <!-- Display The Final Total -->
                     <tr style="border-top:2px solid #000;">

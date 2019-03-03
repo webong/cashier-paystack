@@ -12,31 +12,33 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 trait Billable
 {
     /**
-     * Make a "one off" charge on the customer for the given amount 
-     * Send card details or bank details or authorization code to start a charge.
+     * Make a "one off" or "recurring" charge on the customer for the given amount or plan respectively
      *
-     * @param  int  $amount
+     * @param  $amount
      * @param  array  $options
-     * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function charge($amount, array $options = [])
     {
-        if (! $this->paystack_id) {
-            throw new InvalidArgumentException(class_basename($this).' is not a Paystack customer. See the createAsPaystackCustomer method.');
-        }
         $options = array_merge([
             'currency' => $this->preferredCurrency(),
             'reference' => Paystack::genTranxRef(),
         ], $options);
         
-        $options['amount'] = $amount;
         $options['email'] = $this->email;
-
-        if (! array_key_exists('card', $options) && ! array_key_exists('authorization_code', $options) && ! array_key_exists('bank', $options)) {
-            throw new InvalidArgumentException('No payment source provided.');
+        $options['amount'] = intval($amount);
+        if ( array_key_exists('authorization_code', $options) ) {
+            $response = PaystackService::chargeAuthorization($options);    
+        } elseif (array_key_exists('card', $options) || array_key_exists('bank', $options)) {
+            $response = PaystackService::charge($options);   
+        } else {
+            $response = PaystackService::makePaymentRequest($options);	  
         }
-        
-       return PaystackService::charge($options);  
+
+        if (! $response['status']) {
+            throw new Exception('Paystack was unable to perform a charge: '.$response->message);
+        }
+        return $response;
     }
 
     /**
@@ -49,10 +51,6 @@ trait Billable
      */
     public function refund($transaction, array $options = [])
     {
-        $options = array_merge([
-            'currency' => $this->preferredCurrency(),
-        ], $options);
-
         $options['transaction'] = $transaction;
 
         $response = PaystackService::refund($options);
@@ -98,9 +96,6 @@ trait Billable
      */
     public function invoiceFor($description, $amount, array $options = [])
     {
-        $options = array_merge([
-            'has_invoice' => true,
-        ], $options);
         return $this->tab($description, $amount, $options);
     }
     /**
@@ -290,7 +285,7 @@ trait Billable
         $paystackAuthorizations = $this->asPaystackCustomer()->authorizations;
         if (! is_null($paystackAuthorizations)) {
             foreach ($paystackAuthorizations as $card) {
-                if($card['reusable'])
+                if($card['channel'] == 'card')
                     $cards[] = new Card($this, $card);
             }
         }
@@ -346,7 +341,7 @@ trait Billable
      * @param  array  $options
      * @throws \Exception
      */
-    public function createAsPaystackCustomer($token = null, array $options = [])
+    public function createAsPaystackCustomer(array $options = [])
     {
         $options = array_key_exists('email', $options)
         ? $options

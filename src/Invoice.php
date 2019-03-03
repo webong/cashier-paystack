@@ -31,7 +31,7 @@ class Invoice
     public function __construct($owner, $invoice)
     {
         $this->owner = $owner;
-        $this->invoice = (object) $invoice;
+        $this->invoice = $invoice;
     }
     /**
      * Get a Carbon date for the invoice.
@@ -41,7 +41,7 @@ class Invoice
      */
     public function date($timezone = null): Carbon
     {
-        $carbon = Carbon::instance($this->invoice->created_at);
+        $carbon = Carbon::instance($this->invoice['created_at']);
         return $timezone ? $carbon->setTimezone($timezone) : $carbon;
     }
     /**
@@ -60,7 +60,7 @@ class Invoice
      */
     public function rawTotal()
     {
-        return max(0, $this->invoice->amount);
+        return max(0, $this->invoice['amount']);
     }
     /**
      * Get the total of the invoice (before discounts).
@@ -69,40 +69,94 @@ class Invoice
      */
     public function subtotal()
     {
+        if ($this->hasStartingBalance()) {
+            return $this->startingBalance();
+        }
         return $this->formatAmount(
-            max(0, $this->invoice->amount + $this->discountAmount())
-        );
+            max(0, $this->invoice['amount'] - ($this->invoice['discount']['amount'] ?? 0))
+        );    
     }
     /**
-     * Determine if the invoice has any add-ons.
+     * Determine if the account had a starting balance.
      *
      * @return bool
      */
-    public function hasItems()
+    public function hasStartingBalance()
     {
-        return count($this->invoice->items) > 0;
+        return $this->rawStartingBalance() > 0;
+    }
+    /**
+     * Get the starting balance for the invoice.
+     *
+     * @return string
+     */
+    public function startingBalance()
+    {
+        return $this->formatAmount($this->rawStartingBalance());
+    }
+    /**
+     * Determine if the invoice has a discount.
+     *
+     * @return bool
+     */
+    public function hasDiscount()
+    {
+        return isset($this->invoice['discount']);
     }
     /**
      * Get the discount amount.
      *
      * @return string
      */
-    public function item()
+    public function discount()
     {
-        return $this->formatAmount($this->itemAmount());
+        return $this->formatAmount($this->invoice['discount']['amount']);
     }
     /**
-     * Get the raw item amount.
+     * Determine if the discount is a percentage.
+     *
+     * @return bool
+     */
+    public function discountIsPercentage()
+    {
+        return $this->hasDiscount() && $this->invoice['discount']['type'] == 'percentage' ;
+    }
+    /**
+     * Get the discount percentage for the invoice.
+     *
+     * @return int
+     */
+    public function percentOff()
+    {
+        if ($this->discountIsPercentage()) {
+            return $this->invoice['discount']['amount'];
+        }
+        return 0;
+    }
+    /**
+     * Get the discount amount for the invoice.
+     *
+     * @return string
+     */
+    public function amountOff()
+    {
+        if (isset($this->invoice['discount']['amount_off'])) {
+            return $this->formatAmount($this->invoice['discount']['amount_off']);
+        }
+        return $this->formatAmount(0);
+    }
+    /**
+     * Get the raw invoice balance amount.
      *
      * @return float
      */
-    public function itemAmount()
+    public function rawStartingBalance()
     {
-        $totalAddOn = 0;
-        foreach ($this->invoice->invoiceItems as $item) {
-            $totalItemAmount += $item->amount;
+        $totalItemAmount = 0;
+        foreach ($this->invoice['line_items'] as $item) {
+            $totalItemAmount += $item['amount'];
         }
-        return (float) $totalItemAmount;
+        return $totalItemAmount;
     }
     /**
      * Get the items applied to the invoice.
@@ -112,22 +166,10 @@ class Invoice
     public function invoiceItems()
     {
         $items = [];
-        foreach ($this->invoice->line_items as $item) {
+        foreach ($this->invoice['line_items'] as $item) {
             $items[] = $item;
         }
         return $items;
-    }
-   
-    /**
-     * Get the raw discount amount.
-     *
-     * @return float
-     */
-    public function discountAmount()
-    {
-        $totalDiscount = 0;
-        // Paystack give us discount amount
-        return (float) $totalDiscount;
     }
     /**
      * Format the given amount into a string based on the user's preferences.
@@ -148,7 +190,7 @@ class Invoice
     {
         $data['customer'] = $this->owner->paystack_id;
  
-        return PaystackService::updateInvoice($this->invoice->id, $data);
+        return PaystackService::updateInvoice($this->invoice['id'], $data);
 
     }
     /**
@@ -157,7 +199,7 @@ class Invoice
      */
     public function status()
     {
-        return $this->invoice->status;
+        return $this->invoice['status'];
     }
     /**
      * Verify this invoice instance.
@@ -165,7 +207,7 @@ class Invoice
      */
     public function verify()
     {
-        return PaystackService::verifyInvoice($this->invoice->request_code);
+        return PaystackService::verifyInvoice($this->invoice['request_code']);
     }
     /**
      * Notify the customer for this invoice instance.
@@ -173,26 +215,26 @@ class Invoice
      */
     public function notify()
     {
-        return PaystackService::notifyInvoice($this->invoice->id);
+        return PaystackService::notifyInvoice($this->invoice['id']);
     }
     /**
-     * Finalize a draft instance for the invoice.
+     * Finalize this draft invoice instance.
      *
      */
     public function finalize()
     {
         if ($this->status() === 'draft') {
-            return PaystackService::finalizeInvoice($this->invoice->id);
+            return PaystackService::finalizeInvoice($this->invoice['id']);
         }
         return $this->notify();
     }
     /**
-     * Finalize a draft instance for the invoice.
+     * Archive this invoice instance.
      *
      */
     public function archive()
     {
-        return PaystackService::archiveInvoice($this->invoice->id);
+        return PaystackService::archiveInvoice($this->invoice['id']);
     }
     /**
      * Get the View instance for the invoice.
@@ -247,7 +289,7 @@ class Invoice
     /**
      * Get the Paystack invoice instance.
      *
-     * @return \Paystack\invoice
+     * @return array
      */
     public function asPaystackInvoice()
     {
@@ -262,6 +304,6 @@ class Invoice
      */
     public function __get($key)
     {
-        return $this->invoice->{$key};
+        return $this->invoice[$key];
     }
 }
