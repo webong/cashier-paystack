@@ -285,7 +285,7 @@ trait Billable
         $paystackAuthorizations = $this->asPaystackCustomer()->authorizations;
         if (! is_null($paystackAuthorizations)) {
             foreach ($paystackAuthorizations as $card) {
-                if($card['reusable'])
+                if($card['channel'] == 'card')
                     $cards[] = new Card($this, $card);
             }
         }
