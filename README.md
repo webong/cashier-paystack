@@ -101,7 +101,7 @@ class User extends Authenticatable
 }
 ```
 ## Currency Configuration
-The default Cashier currency is United States Dollars (USD). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
+The default Cashier currency is Nigeria Naira (NGN). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
 ```php
 use Wisdomanthoni\Cashier\Cashier;
 
@@ -129,6 +129,8 @@ $user->newSubscription($plan_name, $plan_code)->charge();
 The first argument passed to the newSubscription method should be the name of the subscription. If your application only offers a single subscription, you might call this main or primary. The second argument is the specific Paystack Paystack code the user is subscribing to. This value should correspond to the Paystack's code identifier in Paystack.
 
 The create method, which accepts a Paystack authorization token, will begin the subscription as well as update your database with the customer/user ID and other relevant billing information.
+
+The charge method, initializes a transaction which returns a response containing an authorization url for payment and an access code. 
 
 Additional User Details
 If you would like to specify additional customer details, you may do so by passing them as the second argument to the create method:
