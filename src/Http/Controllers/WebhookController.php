@@ -47,7 +47,8 @@ class WebhookController extends Controller
     {
         $data = $payload['data'];
         $user = $this->getUserByPaystackCode($data['customer']['customer_code']);
-        if ($user) {
+        $subscription = $this->getSubscriptionByCode($data['subscription_code']);
+        if ($user && !isset($subscription)) {
             $plan = $data['plan'];
             $subscription = $user->newSubscription($plan['name'], $plan['plan_code']);
             $data['id'] =  null;
