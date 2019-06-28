@@ -3,7 +3,6 @@ namespace Webong\Cashier;
 
 use Exception;
 use Carbon\Carbon;
-use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
 use Unicodeveloper\Paystack\Facades\Paystack;
