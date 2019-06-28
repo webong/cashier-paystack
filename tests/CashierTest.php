@@ -1,16 +1,16 @@
 <?php
-namespace Wisdomanthoni\Cashier\Tests;
+namespace Webong\Cashier\Tests;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Wisdomanthoni\Cashier\Billable;
+use Webong\Cashier\Billable;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use Wisdomanthoni\Cashier\PaystackService;
+use Webong\Cashier\PaystackService;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
-use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
+use Webong\Cashier\Http\Controllers\WebhookController;
 
 class CashierTest extends TestCase
 {
@@ -69,7 +69,7 @@ class CashierTest extends TestCase
     public function test_charging_on_user()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $charge = $user->charge(500000);
@@ -79,7 +79,7 @@ class CashierTest extends TestCase
     public function test_subscriptions_can_be_created()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $this->runTestCharge($user);
@@ -130,7 +130,7 @@ class CashierTest extends TestCase
     public function test_creating_subscription_from_webhook()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
 
@@ -210,7 +210,7 @@ class CashierTest extends TestCase
     public function test_creating_subscription_with_trial()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $plan_code = $this->getTestPlan()['plan_code'];
@@ -242,7 +242,7 @@ class CashierTest extends TestCase
     public function test_marking_as_cancelled_from_webhook()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $plan_code = $this->getTestPlan()['plan_code'];
@@ -311,7 +311,7 @@ class CashierTest extends TestCase
     public function test_creating_one_off_invoices()
     {
         $user = User::create([
-            'email' => 'wisdomanthoni@gmail.com',
+            'email' => 'Webong@gmail.com',
             'name' => 'Wisdom Anthony',
         ]);
         $user->createAsPaystackCustomer();

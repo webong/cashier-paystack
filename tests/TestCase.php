@@ -1,5 +1,5 @@
 <?php
-namespace Wisdomanthoni\Cashier\Tests;
+namespace Webong\Cashier\Tests;
 
 use Unicodeveloper\Paystack\Facades\Paystack;
 use Unicodeveloper\Paystack\PaystackServiceProvider;

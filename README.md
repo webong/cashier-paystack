@@ -1,6 +1,6 @@
 
 # Laravel Cashier - Paystack Edition
-[![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/wisdomanthoni/cashier-paystack)
+[![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/Webong/cashier-paystack)
 [![Latest Stable Version](https://poser.pugx.org/webong/cashier-paystack/v/stable)](https://packagist.org/packages/webong/cashier-paystack)
 [![Total Downloads](https://poser.pugx.org/webong/cashier-paystack/downloads)](https://packagist.org/packages/webong/cashier-paystack)
 [![Latest Unstable Version](https://poser.pugx.org/webong/cashier-paystack/v/unstable)](https://packagist.org/packages/webong/cashier-paystack)
@@ -11,7 +11,7 @@ Cashier Paystack provides an expressive, fluent interface to Paystack's subscrip
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
 
-`composer require wisdomanthoni/cashier-paystack`
+`composer require Webong/cashier-paystack`
 
 ## Configuration
 You can publish the configuration file using this command:
@@ -93,7 +93,7 @@ Once the migrations have been created, run the migrate Artisan command.
 ## Billable Model
 Next, add the Billable trait to your model definition. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating credit card information:
 ```php
-use Wisdomanthoni\Cashier\Billable;
+use Webong\Cashier\Billable;
 
 class User extends Authenticatable
 {
@@ -103,7 +103,7 @@ class User extends Authenticatable
 ## Currency Configuration
 The default Cashier currency is Nigeria Naira (NGN). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
 ```php
-use Wisdomanthoni\Cashier\Cashier;
+use Webong\Cashier\Cashier;
 
 Cashier::useCurrency('ngn', '₦');
 Cashier::useCurrency('ghs', 'GH₵');
@@ -286,7 +286,7 @@ Once the customer has been created in Paystack, you may begin a subscription at 
 
 ## Payment Methods 
 ### Retrieving Authenticated Payment Methods
-The cards method on the billable model instance returns a collection of `Wisdomanthoni\Cashier\Card` instances:
+The cards method on the billable model instance returns a collection of `Webong\Cashier\Card` instances:
 ```php
 $cards = $user->cards();
 ```
@@ -307,7 +307,7 @@ Paystack can notify your application of a variety of events via webhooks. To han
 ```php
 Route::post(
     'paystack/webhook',
-    '\Wisdomanthoni\Cashier\Http\Controllers\WebhookController@handleWebhook'
+    '\Webong\Cashier\Http\Controllers\WebhookController@handleWebhook'
 );
 ```
 Once you have registered your route, be sure to configure the webhook URL in your Paystack dashboard settings.
@@ -332,7 +332,7 @@ If you have additional Paystack webhook events you would like to handle, extend 
 
 namespace App\Http\Controllers;
 
-use Wisdomanthoni\Cashier\Http\Controllers\WebhookController as CashierController;
+use Webong\Cashier\Http\Controllers\WebhookController as CashierController;
 
 class WebhookController extends CashierController
 {

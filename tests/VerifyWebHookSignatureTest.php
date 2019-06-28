@@ -1,12 +1,12 @@
 <?php
-namespace Wisdomanthoni\Cashier\Tests;
+namespace Webong\Cashier\Tests;
 
 use Mockery as m;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Config\Repository as Config;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
+use Webong\Cashier\Http\Middleware\VerifyWebhookSignature;
 
 final class VerifyWebhookSignatureTest extends TestCase
 {

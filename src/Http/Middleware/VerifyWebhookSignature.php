@@ -1,5 +1,5 @@
 <?php
-namespace Wisdomanthoni\Cashier\Http\Middleware;
+namespace Webong\Cashier\Http\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Foundation\Application;

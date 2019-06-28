@@ -1,20 +1,19 @@
 <?php
-namespace Wisdomanthoni\Cashier\Http\Controllers;
+namespace Webong\Cashier\Http\Controllers;
 
+use Webong\Cashier\Cashier;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Webong\Cashier\Subscription;
 use Illuminate\Routing\Controller;
-use Wisdomanthoni\Cashier\Cashier;
-use Wisdomanthoni\Cashier\Subscription;
 use Symfony\Component\HttpFoundation\Response;
-use Wisdomanthoni\Cashier\Http\Middleware\VerifyWebhookSignature;
+use Webong\Cashier\Http\Middleware\VerifyWebhookSignature;
 
 class WebhookController extends Controller
 {
     /**
      * Create a new webhook controller instance.
      *
-     * @return voCode
+     * @return void
      */
     public function __construct()
     {
@@ -31,7 +30,7 @@ class WebhookController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = json_decode($request->getContent(), true);
-        $method = 'handle'.studly_case(str_replace('.', '_', $payload['event']));
+        $method = 'handle' . studly_case(str_replace('.', '_', $payload['event']));
         if (method_exists($this, $method)) {
             return $this->{$method}($payload);
         }
@@ -75,7 +74,7 @@ class WebhookController extends Controller
     protected function cancelSubscription($subscriptionCode)
     {
         $subscription = $this->getSubscriptionByCode($subscriptionCode);
-        if ($subscription && (! $subscription->cancelled() || $subscription->onGracePeriod())) {
+        if ($subscription && (!$subscription->cancelled() || $subscription->onGracePeriod())) {
             $subscription->markAsCancelled();
         }
         return new Response('Webhook Handled', 200);
@@ -84,7 +83,7 @@ class WebhookController extends Controller
      * Get the model for the given subscription Code.
      *
      * @param  string  $subscriptionCode
-     * @return \Wisdomanthoni\Cashier\Subscription|null
+     * @return \Webong\Cashier\Subscription|null
      */
     protected function getSubscriptionByCode($subscriptionCode): ?Subscription
     {
@@ -94,7 +93,7 @@ class WebhookController extends Controller
      * Get the billable entity instance by Paystack Code.
      *
      * @param  string  $paystackCode
-     * @return \Wisdomanthoni\Cashier\Billable
+     * @return \Webong\Cashier\Billable
      */
     protected function getUserByPaystackCode($paystackCode)
     {

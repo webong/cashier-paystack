@@ -1,5 +1,5 @@
 <?php
-namespace Wisdomanthoni\Cashier;
+namespace Webong\Cashier;
 
 use Exception;
 use Carbon\Carbon;
@@ -84,7 +84,7 @@ class SubscriptionBuilder
      * Add a new Paystack subscription to the model.
      *
      * @param  array  $options
-     * @return \Wisdomanthoni\Cashier\Subscription
+     * @return \Webong\Cashier\Subscription
      * @throws \Exception
      */
     public function add(array $options = [])
@@ -109,7 +109,7 @@ class SubscriptionBuilder
      * Charge for a Paystack subscription.
      *
      * @param  array  $options
-     * @return \Wisdomanthoni\Cashier\Subscription
+     * @return \Webong\Cashier\Subscription
      * @throws \Exception
      */
     public function charge(array $options = [])
@@ -124,7 +124,7 @@ class SubscriptionBuilder
      *
      * @param  string|null  $token
      * @param  array  $options
-     * @return \Wisdomanthoni\Cashier\Subscription
+     * @return \Webong\Cashier\Subscription
      * @throws \Exception
      */
     public function create($token = null, array $options = [])

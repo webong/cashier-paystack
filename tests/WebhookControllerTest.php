@@ -1,8 +1,8 @@
 <?php
-namespace Wisdomanthoni\Cashier\Tests;
+namespace Webong\Cashier\Tests;
 
 use Illuminate\Http\Request;
-use Wisdomanthoni\Cashier\Http\Controllers\WebhookController;
+use Webong\Cashier\Http\Controllers\WebhookController;
 
 class WebhookControllerTest extends TestCase
 {

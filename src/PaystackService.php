@@ -1,5 +1,5 @@
 <?php
-namespace Wisdomanthoni\Cashier;
+namespace Webong\Cashier;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Config;

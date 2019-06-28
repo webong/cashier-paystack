@@ -1,5 +1,5 @@
 <?php
-namespace Wisdomanthoni\Cashier;
+namespace Webong\Cashier;
 
 use Exception;
 use Carbon\Carbon;
@@ -103,7 +103,7 @@ trait Billable
      *
      * @param  string  $subscription
      * @param  string  $plan
-     * @return \Wisdomanthoni\Cashier\SubscriptionBuilder
+     * @return \Webong\Cashier\SubscriptionBuilder
      */
     public function newSubscription($subscription = 'default', $plan): SubscriptionBuilder
     {
@@ -160,7 +160,7 @@ trait Billable
      * Get a subscription instance by name.
      *
      * @param  string  $subscription
-     * @return \Wisdomanthoni\Cashier\Subscription|null
+     * @return \Webong\Cashier\Subscription|null
      */
     public function subscription($subscription = 'default')
     {
@@ -183,7 +183,7 @@ trait Billable
      * Find an invoice by ID.
      *
      * @param  string  $id
-     * @return \Wisdomanthoni\Cashier\Invoice|null
+     * @return \Webong\Cashier\Invoice|null
      */
     public function findInvoice($id)
     {
@@ -201,7 +201,7 @@ trait Billable
      * Find an invoice or throw a 404 error.
      *
      * @param  string  $id
-     * @return \Wisdomanthoni\Cashier\Invoice
+     * @return \Webong\Cashier\Invoice
      */
     public function findInvoiceOrFail($id): Invoice
     {
