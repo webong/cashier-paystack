@@ -2,7 +2,7 @@
 namespace Webong\Cashier;
 
 use Exception;
-use Illuminate\Support\Str;
+
 class Cashier
 {
     /**
