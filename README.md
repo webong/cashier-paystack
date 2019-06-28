@@ -24,10 +24,10 @@ A configuration-file named paystack.php with some sensible defaults will be plac
 ```php
 'paystack' => [
     'model' => App\User::class,
-    'key' => env('PAYSTACK_PUBLIC_KEY'),
-    'secret' => env('PAYSTACK_SECRET_KEY'),
-    'paymentUrl' => env('PAYSTACK_PAYMENT_URL'),
-    'merchantEmail' => env('PAYSTACK_MERCHANT_EMAIL'),
+    'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+    'secret_key' => env('PAYSTACK_SECRET_KEY'),
+    'payment_url' => env('PAYSTACK_PAYMENT_URL'),
+    'merchant_email' => env('PAYSTACK_MERCHANT_EMAIL'),
 ],
 ```
 
