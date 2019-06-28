@@ -11,58 +11,27 @@ Cashier Paystack provides an expressive, fluent interface to Paystack's subscrip
 ## Composer
 First, add the Cashier package for Paystack to your dependencies:
 
-`composer require Webong/cashier-paystack`
+`composer require webong/cashier-paystack`
 
 ## Configuration
+
+### API Keys
+You should configure your Paystack key in your services.php configuration file. You can retrieve your Paystack API keys from the Paystack dashboard:
 You can publish the configuration file using this command:
 
-```shell
-php artisan vendor:publish --provider="Unicodeveloper\Paystack\PaystackServiceProvider"
-```
 A configuration-file named paystack.php with some sensible defaults will be placed in your config directory:
+
 ```php
-<?php
-
-return [
-
-    /**
-     * Public Key From Paystack Dashboard
-     *
-     */
-    'publicKey' => getenv('PAYSTACK_PUBLIC_KEY'),
-
-    /**
-     * Secret Key From Paystack Dashboard
-     *
-     */
-    'secretKey' => getenv('PAYSTACK_SECRET_KEY'),
-
-    /**
-     * Paystack Payment URL
-     *
-     */
-    'paymentUrl' => getenv('PAYSTACK_PAYMENT_URL'),
-
-    /**
-     * Optional email address of the merchant
-     *
-     */
-    'merchantEmail' => getenv('MERCHANT_EMAIL'),
-
-    /**
-     * User model for customers
-     *
-     */
-    'model' => getenv('PAYSTACK_MODEL'),
-
-];
-```
-Update your .env file with the user model
-```
-PAYSTACK_MODEL='App\User'
+'paystack' => [
+    'model' => App\User::class,
+    'key' => env('PAYSTACK_PUBLIC_KEY'),
+    'secret' => env('PAYSTACK_SECRET_KEY'),
+    'paymentUrl' => env('PAYSTACK_PAYMENT_URL'),
+    'merchantEmail' => env('PAYSTACK_MERCHANT_EMAIL'),
+],
 ```
 
-## Database Migrations
+### Database Migrations
 Before using Cashier, we'll also need to prepare the database. We need to add several columns to your  users table and create a new subscriptions table to hold all of our customer's subscriptions:
 
 ```php
@@ -90,8 +59,9 @@ Schema::create('subscriptions', function ($table) {
 ```
 Once the migrations have been created, run the migrate Artisan command.
 
-## Billable Model
+### Billable Model
 Next, add the Billable trait to your model definition. This trait provides various methods to allow you to perform common billing tasks, such as creating subscriptions, applying coupons, and updating credit card information:
+
 ```php
 use Webong\Cashier\Billable;
 
@@ -100,8 +70,10 @@ class User extends Authenticatable
     use Billable;
 }
 ```
-## Currency Configuration
+
+### Currency Configuration
 The default Cashier currency is Nigeria Naira (NGN). You can change the default currency by calling the Cashier::useCurrency method from within the boot method of one of your service providers. The useCurrency method accepts two string parameters: the currency and the currency's symbol:
+
 ```php
 use Webong\Cashier\Cashier;
 
