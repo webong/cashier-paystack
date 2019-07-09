@@ -5,7 +5,7 @@ use Exception;
 use Carbon\Carbon;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
-use Unicodeveloper\Paystack\Facades\Paystack;
+use Xeviant\LaravelPaystack\Facades\Paystack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait Billable
@@ -28,14 +28,12 @@ trait Billable
         $options['amount'] = intval($amount);
         if ( array_key_exists('authorization_code', $options) ) {
             $response = PaystackService::chargeAuthorization($options);    
-        } elseif (array_key_exists('card', $options) || array_key_exists('bank', $options)) {
-            $response = PaystackService::charge($options);   
         } else {
-            $response = PaystackService::makePaymentRequest($options);	  
+            $response = Paystack::getAuthorizationResponse($options);	  
         }
 
         if (! $response['status']) {
-            throw new Exception('Paystack was unable to perform a charge: '.$response->message);
+            throw new Exception('Paystack was unable to perform a charge: '. $response->message);
         }
         return $response;
     }
@@ -52,7 +50,7 @@ trait Billable
     {
         $options['transaction'] = $transaction;
 
-        $response = PaystackService::refund($options);
+        $response = PaystackService::createRefund($options);
         return $response;
     }
 
