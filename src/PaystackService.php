@@ -1,6 +1,8 @@
 <?php
 namespace Webong\Cashier;
 
+use Xeviant\LaravelPaystack\Facades\PaystackV1 as Paystack;
+
 class PaystackService 
 {
     /**
@@ -14,12 +16,6 @@ class PaystackService
     {
         $this->paystack = app()->make('paystack.connection');
     }
-
-    // private function setRequestPayload($data)
-    // {
-    //     $request = new Request;
-    //     $request->replace($data);
-    // }
 
     public static function chargeAuthorization($data)
     {
@@ -110,6 +106,7 @@ class PaystackService
 
     public static function createPlan($data)
     {
-        return (new self)->setHttpResponse('/plan', 'POST', $data)->getData();
+        request()->replace($data);
+        return Paystack::createPlan($data);
     }
 }

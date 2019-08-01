@@ -16,9 +16,10 @@
         </testsuite>
     </testsuites>
     <php>
-        <env name="PAYSTACK_MODEL" value="Webong\Cashier\Tests\User"/>
-        <env name="PAYSTACK_PAYMENT_URL" value="https://api.paystack.co"/>
         <env name="PAYSTACK_PUBLIC_KEY" value=""/>
         <env name="PAYSTACK_SECRET_KEY" value=""/>
+        <env name="PAYSTACK_PAYMENT_URL" value="https://api.paystack.co"/>
+        <env name="MERCHANT_EMAIL" value=""/>
+        <env name="PAYSTACK_MODEL" value="Webong\Cashier\Tests\User"/>
     </php>
 </phpunit>

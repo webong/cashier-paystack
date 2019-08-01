@@ -5,7 +5,7 @@ use Exception;
 use Carbon\Carbon;
 use InvalidArgumentException;
 use Illuminate\Support\Collection;
-use Xeviant\LaravelPaystack\Facades\Paystack;
+use Xeviant\LaravelPaystack\Facades\PaystackV1 as Paystack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait Billable
@@ -30,10 +30,6 @@ trait Billable
             $response = PaystackService::chargeAuthorization($options);    
         } else {
             $response = Paystack::getAuthorizationResponse($options);	  
-        }
-
-        if (! $response['status']) {
-            throw new Exception('Paystack was unable to perform a charge: '. $response->message);
         }
         return $response;
     }
