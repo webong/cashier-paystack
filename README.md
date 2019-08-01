@@ -15,6 +15,18 @@ First, add the Cashier package for Paystack to your dependencies:
 
 `composer require webong/cashier-paystack`
 
+What to do if you see a "rhumsaa/uuid is abandoned" message
+When installing your project's dependencies using Composer, you might see the following message:
+
+Package rhumsaa/uuid is abandoned, you should avoid using it. Use ramsey/uuid instead.
+Don't panic. Simply execute the following commands with Composer:
+
+``` 
+composer remove wisdomanthoni/cashier-paystack
+composer require webong/cashier-paystack
+```
+After doing so, you will have the latest webong/cashier-paystack package in the 2.x series, and there will be no need to modify any code; the namespace in the 2.x series is still Wisdomanthoni.
+
 ## Configuration
 
 ### API Keys
