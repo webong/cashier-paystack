@@ -1,5 +1,7 @@
 
 # Laravel Cashier - Paystack Edition
+NOTICE: Formerly known as wisdomanthoni/cashier-paystack, The package and namespace names have changed to webong/cashier-paystack and Webong\Cashier, respectively
+
 [![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/Webong/cashier-paystack)
 [![Latest Stable Version](https://poser.pugx.org/webong/cashier-paystack/v/stable)](https://packagist.org/packages/webong/cashier-paystack)
 [![Total Downloads](https://poser.pugx.org/webong/cashier-paystack/downloads)](https://packagist.org/packages/webong/cashier-paystack)
