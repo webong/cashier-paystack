@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/webong/cashier-paystack)
 [![Latest Stable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/stable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 [![Total Downloads](https://poser.pugx.org/wisdomanthoni/cashier-paystack/downloads)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
-[![Latest Unstable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/unstable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 [![License](https://poser.pugx.org/wisdomanthoni/cashier-paystack/license)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
+
 # Introduction
 Cashier Paystack provides an expressive, fluent interface to Paystack's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
