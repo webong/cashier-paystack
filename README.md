@@ -1,7 +1,7 @@
 
 # Laravel Cashier - Paystack Edition
 [![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/webong/cashier-paystack)
-[![Latest Stable Version](https://poser.pugx.org/webong/cashier-paystack/v/stable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
+[![Latest Stable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/stable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 [![Total Downloads](https://poser.pugx.org/wisdomanthoni/cashier-paystack/downloads)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 [![Latest Unstable Version](https://poser.pugx.org/wisdomanthoni/cashier-paystack/v/unstable)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
 [![License](https://poser.pugx.org/wisdomanthoni/cashier-paystack/license)](https://packagist.org/packages/wisdomanthoni/cashier-paystack)
