@@ -2,11 +2,11 @@
 # Laravel Cashier - Paystack Edition
 NOTICE: Formerly known as wisdomanthoni/cashier-paystack, The package and namespace names have changed to webong/cashier-paystack and Webong\Cashier, respectively
 
-[![Build Status](https://travis-ci.org/webong/cashier-paystack.svg)](https://travis-ci.org/Webong/cashier-paystack)
+[![Build Status](https://travis-ci.org/webong/cashier-paystack.svg?branch=2.x)](https://travis-ci.org/webong/cashier-paystack)
 [![Latest Stable Version](https://poser.pugx.org/webong/cashier-paystack/v/stable)](https://packagist.org/packages/webong/cashier-paystack)
 [![Total Downloads](https://poser.pugx.org/webong/cashier-paystack/downloads)](https://packagist.org/packages/webong/cashier-paystack)
-[![Latest Unstable Version](https://poser.pugx.org/webong/cashier-paystack/v/unstable)](https://packagist.org/packages/webong/cashier-paystack)
 [![License](https://poser.pugx.org/webong/cashier-paystack/license)](https://packagist.org/packages/webong/cashier-paystack)
+
 # Introduction
 Cashier Paystack provides an expressive, fluent interface to Paystack's subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
@@ -18,14 +18,14 @@ First, add the Cashier package for Paystack to your dependencies:
 What to do if you see a "wisdomanthoni/cashier-paystack is abandoned" message
 When installing your project's dependencies using Composer, you might see the following message:
 
-Package rhumsaa/uuid is abandoned, you should avoid using it. Use ramsey/uuid instead.
+Package wisdomanthoni/cashier-paystack is abandoned, you should avoid using it. Use webong/cashier-paystack instead.
 Don't panic. Simply execute the following commands with Composer:
 
 ``` 
 composer remove wisdomanthoni/cashier-paystack
+
 composer require webong/cashier-paystack
 ```
-After doing so, you will have the latest webong/cashier-paystack package in the 2.x series, and there will be no need to modify any code; the namespace in the 2.x series is still Wisdomanthoni.
 
 ## Configuration
 
