@@ -59,7 +59,7 @@ return [
 ```
 Update your .env file with the user model
 ```
-PAYSTACK_MODEL='App\User'
+PAYSTACK_MODEL='App\Model\User'
 ```
 
 ## Database Migrations
@@ -112,7 +112,7 @@ Cashier::useCurrency('ghs', 'GH₵');
 ## Subscriptions
 
 ### Creating Subscriptions
-To create a subscription, first retrieve an instance of your billable model, which typically will be an instance of App\User. Once you have retrieved the model instance, you may use the  newSubscription method to create the model's subscription:
+To create a subscription, first retrieve an instance of your billable model, which typically will be an instance of App\Model\User. Once you have retrieved the model instance, you may use the  newSubscription method to create the model's subscription:
 
 ```php
 $user = User::find(1);
